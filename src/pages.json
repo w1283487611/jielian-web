@@ -5,7 +5,20 @@
 			"style": {
 				"navigationBarTitleText": "uni-app"
 			}
+		}, 
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false,
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
 		}
+
+
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
