@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { createPersistedState } from "pinia-plugin-persistedstate"; // 数据持久化
 
 // import router from '@/router'
-import { ElMessageBox } from "element-plus";
+// import { ElMessageBox } from "element-plus";
 import { login, logout, getInfo } from "@/api/login";
 import { getToken, setToken, removeToken } from "@/utils/auth";
 import { isHttp, isEmpty } from "@/utils/validate";
@@ -74,40 +74,40 @@ const useUserStore = defineStore("user", {
             this.avatar = avatar;
             this.phone = user.phone;
             this.user = user;
-            /* 初始密码提示 */
-            if (res.isDefaultModifyPwd) {
-              ElMessageBox.confirm(
-                "您的密码还是初始密码，请修改密码！",
-                "安全提示",
-                {
-                  confirmButtonText: "确定",
-                  cancelButtonText: "取消",
-                  type: "warning",
-                }
-              )
-                .then(() => {
-                  // router.push({ name: 'Profile', params: { activeTab: 'resetPwd' } })
-                  console.log("路由跳转");
-                })
-                .catch(() => {});
-            }
-            /* 过期密码提示 */
-            if (!res.isDefaultModifyPwd && res.isPasswordExpired) {
-              ElMessageBox.confirm(
-                "您的密码已过期，请尽快修改密码！",
-                "安全提示",
-                {
-                  confirmButtonText: "确定",
-                  cancelButtonText: "取消",
-                  type: "warning",
-                }
-              )
-                .then(() => {
-                  // router.push({ name: 'Profile', params: { activeTab: 'resetPwd' } })
-                  console.log("路由跳转");
-                })
-                .catch(() => {});
-            }
+            // /* 初始密码提示 */
+            // if (res.isDefaultModifyPwd) {
+            //   ElMessageBox.confirm(
+            //     "您的密码还是初始密码，请修改密码！",
+            //     "安全提示",
+            //     {
+            //       confirmButtonText: "确定",
+            //       cancelButtonText: "取消",
+            //       type: "warning",
+            //     }
+            //   )
+            //     .then(() => {
+            //       // router.push({ name: 'Profile', params: { activeTab: 'resetPwd' } })
+            //       console.log("路由跳转");
+            //     })
+            //     .catch(() => {});
+            // }
+            // /* 过期密码提示 */
+            // if (!res.isDefaultModifyPwd && res.isPasswordExpired) {
+            //   ElMessageBox.confirm(
+            //     "您的密码已过期，请尽快修改密码！",
+            //     "安全提示",
+            //     {
+            //       confirmButtonText: "确定",
+            //       cancelButtonText: "取消",
+            //       type: "warning",
+            //     }
+            //   )
+            //     .then(() => {
+            //       // router.push({ name: 'Profile', params: { activeTab: 'resetPwd' } })
+            //       console.log("路由跳转");
+            //     })
+            //     .catch(() => {});
+            // }
             resolve(res);
           })
           .catch((error) => {

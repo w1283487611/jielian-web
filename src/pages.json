@@ -74,7 +74,16 @@
 		"selectedColor": "#007AFF",
 		"borderStyle": "black",
 		"backgroundColor": "#FFFFFF",
-		"list": []
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/login/login",
+				"text": "登录"
+			}
+		]
 	},
 	"condition": {
 		"current": 0,

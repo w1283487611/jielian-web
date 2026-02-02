@@ -35,7 +35,7 @@
       </view>
 
       <label class="checkbox-wrapper">
-        <checkbox v-model="loginForm.rememberMe" @click="loginForm.rememberMe = !loginForm.rememberMe"
+        <checkbox :checked="loginForm.rememberMe" @click="loginForm.rememberMe = !loginForm.rememberMe"
           style="transform: scale(0.8);" />
         <text class="checkbox-label">记住密码</text>
       </label>
