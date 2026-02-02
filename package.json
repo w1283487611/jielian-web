@@ -53,6 +53,12 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-4080720251210001",
     "@dcloudio/uni-mp-xhs": "3.0.0-4080720251210001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4080720251210001",
+    "axios": "^1.13.4",
+    "element-plus": "^2.13.2",
+    "file-saver": "^2.0.5",
+    "js-cookie": "^3.0.5",
+    "jsencrypt": "^3.5.4",
+    "nprogress": "^0.2.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.4.21",
@@ -65,8 +71,10 @@
     "@dcloudio/uni-stacktracey": "3.0.0-4080720251210001",
     "@dcloudio/vite-plugin-uni": "3.0.0-4080720251210001",
     "@vue/runtime-core": "^3.4.21",
+    "sass": "^1.97.3",
     "typescript": "^5.9.3",
     "unplugin-auto-import": "^21.0.0",
+    "unplugin-vue-components": "^31.0.0",
     "vite": "5.2.8"
   }
 }

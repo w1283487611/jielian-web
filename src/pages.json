@@ -5,8 +5,7 @@
 			"style": {
 				"navigationBarTitleText": "uni-app"
 			}
-		}, 
-		{
+		},{
 			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "登录",
@@ -17,8 +16,49 @@
 				}
 			}
 		}
-
-
+	],
+	"subPackages": [// 模块分包
+		{ 
+			"root": "pages/student",
+			"name": "student",
+			"pages": [
+				{
+					"path": "test/test",
+					"style": {
+						"navigationBarTitleText": "学员",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				}
+			]
+		},{ 
+			"root": "pages/coach",
+			"name": "coach",
+			"pages": [
+				{
+					"path": "test/test",
+					"style": {
+						"navigationBarTitleText": "教练",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				}
+			]
+		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

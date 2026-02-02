@@ -1,5 +1,13 @@
 <template>
   <view class="content">
+    <navigator url="/pages/login/login" open-type="navigate" class="link-type">
+            登录页
+    </navigator>
+    <br>
+    <navigator url="/pages/coach/test/test" open-type="navigate" class="link-type">
+            教练页
+    </navigator>
+    <button>点击</button>
     <image class="logo" src="/static/logo.png"></image>
     <view class="text-area">
       <text class="title">{{ title }}</text>
