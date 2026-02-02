@@ -17,9 +17,11 @@ setActivePinia(store)
 // 2- 传入大仓库：告知模块todos是属于哪一个大仓库下的。
 import useTestStore from "./modules/test";
 import useUserStore from "./modules/user";
+import useTabbarStore from "./modules/tabbar";
 
 const test = useTestStore(store);
 const user = useUserStore(store);
+const tabbar = useTabbarStore(store);
 // console.log(test);
 
 export default store;

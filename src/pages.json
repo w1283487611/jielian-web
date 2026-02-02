@@ -5,7 +5,8 @@
 			"style": {
 				"navigationBarTitleText": "uni-app"
 			}
-		},{
+		},
+		{
 			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "登录",
@@ -17,8 +18,8 @@
 			}
 		}
 	],
-	"subPackages": [// 模块分包
-		{ 
+	"subPackages": [ // 模块分包
+		{
 			"root": "pages/student",
 			"name": "student",
 			"pages": [
@@ -38,7 +39,8 @@
 					}
 				}
 			]
-		},{ 
+		},
+		{
 			"root": "pages/coach",
 			"name": "coach",
 			"pages": [
@@ -65,5 +67,34 @@
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"custom": true,
+		"color": "#7A7E83",
+		"selectedColor": "#007AFF",
+		"borderStyle": "black",
+		"backgroundColor": "#FFFFFF",
+		"list": []
+	},
+	"condition": {
+		"current": 0,
+		"list": [
+			{
+				"name": "学员端",
+				"path": "pages/student/index/index",
+				"query": ""
+			},
+			{
+				"name": "教练端",
+				"path": "pages/coach/index/index",
+				"query": ""
+			}
+		]
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+		}
 	}
 }

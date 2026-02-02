@@ -16,11 +16,14 @@ const useUserStore = defineStore("user", {
     token: getToken(),
     id: "",
     name: "",
+    username: "",
     nickName: "",
     avatar: "",
+    phone: "",
     roleId: "",
     roles: [],
     permissions: [],
+    user: undefined
   }),
   actions: {
     // 登录
@@ -37,6 +40,7 @@ const useUserStore = defineStore("user", {
             // console.log(this);
             // 存储数据到store
             this.token = res.token;
+            this.getInfo();
             resolve();
           })
           .catch((error) => {
@@ -64,9 +68,12 @@ const useUserStore = defineStore("user", {
               this.roles = ["ROLE_DEFAULT"];
             }
             this.id = user.userId;
-            this.name = user.userName;
+            this.roleId = user.roleId;
+            this.username = user.username;
             this.nickName = user.nickName;
             this.avatar = avatar;
+            this.phone = user.phone;
+            this.user = user;
             /* 初始密码提示 */
             if (res.isDefaultModifyPwd) {
               ElMessageBox.confirm(
@@ -125,6 +132,10 @@ const useUserStore = defineStore("user", {
       });
     },
   },
+    // 持久化配置
+    persist: {
+      key: 'user_state',
+    }
 });
 
 export default useUserStore;

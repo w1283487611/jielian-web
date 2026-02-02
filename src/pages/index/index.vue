@@ -1,30 +1,48 @@
 <template>
-  <view class="content">
-    <navigator url="/pages/login/login" open-type="navigate" class="link-type">
-            登录页
-    </navigator>
-    <br>
-    <navigator url="/pages/coach/test/test" open-type="navigate" class="link-type">
-            教练页
-    </navigator>
-    <button>点击</button>
-    <image class="logo" src="/static/logo.png"></image>
-    <view class="text-area">
-      <text class="title">{{ title }}</text>
+  <view>
+    <view class="content">
+      <navigator url="/pages/login/login" open-type="navigate" class="link-type">
+        登录页
+      </navigator>
+      <br>
+      <navigator url="/pages/coach/test/test" open-type="navigate" class="link-type">
+        教练页
+      </navigator>
+      <button @click="getUserInfo">getUserInfo</button>
+      <button @click="getTabbar(3)">教练</button>
+      <button @click="getTabbar(4)">学员</button>
+      <image class="logo" src="/static/logo.png"></image>
+
     </view>
   </view>
+
+
+  <!-- 自定义 TabBar -->
+  <tabbar />
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      title: 'Index',
-    }
-  },
-  onLoad() {},
-  methods: {},
+<script setup>
+import { login, logout, getInfo } from "@/api/login";
+import Tabbar from "@/components/tabbar/index.vue";
+import useTabbarStore from '@/store/modules/tabbar';
+
+const tabbarStore = useTabbarStore();
+
+// 获取用户信息测试
+const getTabbar = (roleId) => {
+  tabbarStore.switchRole(roleId);
 }
+
+
+// 获取用户信息测试
+const getUserInfo = () => {
+  getInfo()
+    .then((res) => {
+      console.log(res)
+    })
+
+}
+
 </script>
 
 <style>
