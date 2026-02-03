@@ -1,16 +1,13 @@
 import axios from "axios";
-// import {
-//   ElNotification,
-//   ElMessageBox,
-//   ElMessage,
-//   ElLoading,
-// } from "element-plus";
 import { getToken } from "@/utils/auth";
 import errorCode from "@/utils/errorCode";
 import { tansParams, blobValidate } from "@/utils/ruoyi";
 import cache from "@/plugins/cache";
+// #ifdef H5
 import { saveAs } from "file-saver";
+// #endif
 import useUserStore from "@/store/modules/user";
+import { uniappAdapter } from '@zebra-ui/axios-adapter'; // uniapp适配器
 
 let downloadLoadingInstance;
 // 是否显示重新登录
@@ -20,7 +17,13 @@ axios.defaults.headers["Content-Type"] = "application/json;charset=utf-8";
 // 创建axios实例
 const service = axios.create({
   // axios中请求配置有baseURL选项，表示请求URL公共部分
+  // #ifdef H5
   baseURL: import.meta.env.VITE_APP_BASE_API,
+  // #endif
+  // #ifndef H5
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  // #endif
+  adapter: uniappAdapter
   // // 超时
   // timeout: 10000
 });
@@ -203,9 +206,8 @@ service.interceptors.response.use(
 
 // 通用下载方法
 export function download(url, params, filename, config) {
-  downloadLoadingInstance =
-    // ElLoading.service({ text: "正在下载数据，请稍候", background: "rgba(0, 0, 0, 0.7)", })
-    uni.showLoading({ title: "正在下载数据，请稍候" });
+  // downloadLoadingInstance = ElLoading.service({ text: "正在下载数据，请稍候", background: "rgba(0, 0, 0, 0.7)", })
+  downloadLoadingInstance = uni.showLoading({ title: "正在下载数据，请稍候" });
   return service
     .post(url, params, {
       transformRequest: [
@@ -221,7 +223,10 @@ export function download(url, params, filename, config) {
       const isBlob = blobValidate(data);
       if (isBlob) {
         const blob = new Blob([data]);
+        // #ifdef H5
         saveAs(blob, filename);
+        // #endif
+        
       } else {
         const resText = await data.text();
         const rspObj = JSON.parse(resText);

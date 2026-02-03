@@ -37,7 +37,52 @@
 							// #endif
 						}
 					}
-				}
+				},
+				{
+					"path": "index/index",
+					"style": {
+						"navigationBarTitleText": "学员主页",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "appoint/appoint",
+					"style": {
+						"navigationBarTitleText": "预约",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "my/my",
+					"style": {
+						"navigationBarTitleText": "我的",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
 			]
 		},
 		{

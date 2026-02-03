@@ -1,5 +1,9 @@
+// #ifdef H5
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+// #endif
+
+
 import { getToken } from "@/utils/auth";
 import { isHttp, isPathMatch } from "@/utils/validate";
 import { isRelogin } from "@/utils/request";
@@ -7,7 +11,10 @@ import useUserStore from "@/store/modules/user";
 // import useSettingsStore from '@/store/modules/settings'
 // import usePermissionStore from '@/store/modules/permission'
 
+// #ifdef H5
 NProgress.configure({ showSpinner: false });
+// #endif
+
 
 const indexPath = "/pages/index/index";
 const loginPath = "/pages/login/login";
@@ -24,7 +31,10 @@ const isWhiteList = (path) => {
  */
 const beforeEach = (args) => {
     // 开启进度条
+    // #ifdef H5
     NProgress.start();
+    // #endif
+    
 
     if (getToken()) { //获取到了token
         // 设置目标页面的标题
@@ -32,7 +42,10 @@ const beforeEach = (args) => {
         if (args.url === loginPath) {
             //已经登录，防止二次登录
             args.url = indexPath;
+            // #ifdef H5
             NProgress.done();
+            // #endif
+            
         } else if (isWhiteList(args.url)) {
             // 白名单，例如注册
             return args;
@@ -88,7 +101,10 @@ const beforeEach = (args) => {
             return args;
         } else { // 否则全部重定向到登录页
             args.url = `${loginPath}?redirect=${args.url}`
+            // #ifdef H5
             NProgress.done();
+            // #endif
+            
             return args;
         }
     }
@@ -99,7 +115,10 @@ const beforeEach = (args) => {
  * 路由后置操作
  */
 const afterEach = () => {
+    // #ifdef H5
     NProgress.done()
+    // #endif
+    
 }
 
 // 拦截 navigateTo
@@ -240,34 +259,34 @@ const addAllInterceptors = () => {
     uni.addInterceptor("reLaunch", interceptorConfig);
 
     // 拦截 switchTab（跳转到 tabBar 页面）
-    uni.addInterceptor("switchTab", {
-        ...interceptorConfig,
-        invoke(args) {
-            console.log("跳转到Tab页:", args.url);
+    // uni.addInterceptor("switchTab", {
+    //     ...interceptorConfig,
+    //     invoke(args) {
+    //         console.log("跳转到Tab页:", args.url);
 
-            // Tab切换的特殊处理
-            const token = uni.getStorageSync('token');
-            const needLoginTabs = ['/pages/user/index'];
+    //         // Tab切换的特殊处理
+    //         const token = uni.getStorageSync('token');
+    //         const needLoginTabs = ['/pages/user/index'];
 
-            if (needLoginTabs.includes(args.url) && !token) {
-                uni.showModal({
-                    title: '提示',
-                    content: '该功能需要登录，是否前往登录？',
-                    success(res) {
-                        if (res.confirm) {
-                            uni.navigateTo({
-                                url: '/pages/login/index'
-                            });
-                        }
-                    }
-                });
-                return false;
-            }
+    //         if (needLoginTabs.includes(args.url) && !token) {
+    //             uni.showModal({
+    //                 title: '提示',
+    //                 content: '该功能需要登录，是否前往登录？',
+    //                 success(res) {
+    //                     if (res.confirm) {
+    //                         uni.navigateTo({
+    //                             url: '/pages/login/index'
+    //                         });
+    //                     }
+    //                 }
+    //             });
+    //             return false;
+    //         }
 
-            const result = beforeEach(args);
-            return result === false ? false : args;
-        }
-    });
+    //         const result = beforeEach(args);
+    //         return result === false ? false : args;
+    //     }
+    // });
 
     // 拦截 navigateBack（返回上一页面或多级页面）
     uni.addInterceptor("navigateBack", {
