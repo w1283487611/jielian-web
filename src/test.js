@@ -2,8 +2,6 @@
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 // #endif
-
-
 import { getToken } from "@/utils/auth";
 import { isHttp, isPathMatch } from "@/utils/validate";
 import { isRelogin } from "@/utils/request";

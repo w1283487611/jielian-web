@@ -17,6 +17,12 @@
 				}
 			}
 		},
+		{
+			"path": "pages/select-role/select-role",
+			"style": {
+				"navigationBarTitleText": "角色选择"
+			}
+		},
 		// 学员tabbar
 		{
 			"path": "pages/tabbar/student/index/index",

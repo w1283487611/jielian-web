@@ -1,12 +1,16 @@
 import { defineStore } from "pinia";
-import { createPersistedState } from "pinia-plugin-persistedstate"; // 数据持久化
 
-// import router from '@/router'
-// import { ElMessageBox } from "element-plus";
 import { login, logout, getInfo } from "@/api/login";
-import { getToken, setToken, removeToken } from "@/utils/auth";
+import {
+  getToken, setToken, removeToken,
+  getUserRole, setUserRole, removeUserRole 
+} from "@/utils/auth";
 import { isHttp, isEmpty } from "@/utils/validate";
 import defAva from "@/assets/images/profile.jpg";
+
+import { 
+  STORAGE_KEY, SYS_ROLES, SYS_ROLE_KEYS, COACH, STUDENT
+} from "@/utils/constants";
 
 /**
  * 用户登录信息Store
@@ -20,10 +24,12 @@ const useUserStore = defineStore("user", {
     nickName: "",
     avatar: "",
     phone: "",
-    roleId: 3,
+    roleId: "",
+    /** 当前角色：student | coach */
+    role: '',
     roles: [],
     permissions: [],
-    user: undefined
+    user: undefined,
   }),
   actions: {
     // 登录
@@ -131,11 +137,23 @@ const useUserStore = defineStore("user", {
           });
       });
     },
+    /**
+     * 切换角色: student/coach
+     */
+    setRole(role) {
+      if (SYS_ROLE_KEYS.includes(role)) return;
+      // if (role !== "student" && role !== "coach") return;
+      if (this.role === role) return;
+      this.role = role;
+
+      uni.setStorageSync( STORAGE_KEY, this.role);
+    },
   },
-    // 持久化配置
-    persist: {
-      key: 'user_state',
-    }
+  // 持久化配置
+  persist: {
+    key: "user_state",
+    paths: ["token", "getInfo"],
+  },
 });
 
 export default useUserStore;

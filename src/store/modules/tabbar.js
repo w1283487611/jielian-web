@@ -83,9 +83,6 @@ function cloneTabList(list) {
  */
 const useTabbarStore = defineStore('tabbar', {
   state: () => ({
-    /** 当前角色：student | coach */
-    role: 'student',
-
     /** 当前 TabBar 列表（一定是“拷贝后的新对象”） */
     tabList: cloneTabList(STUDENT_TAB_TEMPLATE),
 
@@ -137,7 +134,7 @@ const useTabbarStore = defineStore('tabbar', {
     },
 
     /**
-     * 切换角色（核心逻辑）
+     * 切换角色的tabbar（核心逻辑）
      */
     switchRole(roleId) {
       let role = '';
@@ -183,7 +180,7 @@ const useTabbarStore = defineStore('tabbar', {
           this.showTabBar = data.showTabBar
         }
       } catch (e) {
-        console.warn('[tabbar] restore failed:', e)
+        console.warn('[tabbar] 存储失败:', e)
       }
     }
   },
@@ -195,7 +192,7 @@ const useTabbarStore = defineStore('tabbar', {
    */
   persist: {
     key: 'tabbar_state',
-    paths: ['role', 'selectedIndex', 'showTabBar']
+    paths: [ 'selectedIndex', 'showTabBar']
   }
 })
 
