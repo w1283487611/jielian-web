@@ -14,11 +14,12 @@
       <image class="logo" src="/static/logo.png"></image>
 
     </view>
+
+    <!-- 自定义 TabBar -->
+    <tabbar />
   </view>
 
 
-  <!-- 自定义 TabBar -->
-  <tabbar />
 </template>
 
 <script setup>

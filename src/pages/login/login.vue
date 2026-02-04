@@ -204,7 +204,8 @@ const handleLogin = async () => {
       // }, {})
       // router.push({ path: redirect.value || "/", query: otherQueryParams })
 
-    }).catch(() => {
+    }).catch((res) => {
+      console.log(res)
       loading.value = false
       uni.hideLoading()
       // 重新获取验证码
