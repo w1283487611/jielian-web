@@ -1,4 +1,8 @@
 import { defineStore } from 'pinia';
+import {
+  getToken, setToken, removeToken,
+  getUserRole, setUserRole, removeUserRole 
+} from "@/utils/auth";
 
 const studentList = [
     {

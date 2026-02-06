@@ -18,9 +18,15 @@
 // }
 
 // utils/auth.js - 使用 UniApp 存储 API
-const TokenKey = 'Login-Token';
-const UserKey = 'Login-User';
-const RoleKey = 'User-Role';
+import { 
+  ROLE_STORAGE_KEY as RoleKey,
+  USER_STORAGE_KEY as UserKey,
+  TOKEN_STORAGE_KEY as TokenKey
+} from "@/utils/constants";
+
+// const TokenKey = 'Login-Token';
+// const UserKey = 'Login-User';
+// const RoleKey = 'User-Role';
 
 // Token
 // 获取 Token

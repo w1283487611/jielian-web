@@ -9,7 +9,7 @@ import { isHttp, isEmpty } from "@/utils/validate";
 import defAva from "@/assets/images/profile.jpg";
 
 import { 
-  STORAGE_KEY, SYS_ROLES, SYS_ROLE_KEYS, COACH, STUDENT
+ SYS_ROLES, SYS_ROLE_KEYS, COACH, STUDENT
 } from "@/utils/constants";
 
 /**
@@ -26,7 +26,7 @@ const useUserStore = defineStore("user", {
     phone: "",
     roleId: "",
     /** 当前角色：student | coach */
-    role: '',
+    role: getUserRole(),
     roles: [],
     permissions: [],
     user: undefined,
@@ -141,18 +141,18 @@ const useUserStore = defineStore("user", {
      * 切换角色: student/coach
      */
     setRole(role) {
-      if (SYS_ROLE_KEYS.includes(role)) return;
+      if (!SYS_ROLE_KEYS.includes(role)) return;
       // if (role !== "student" && role !== "coach") return;
       if (this.role === role) return;
       this.role = role;
 
-      uni.setStorageSync( STORAGE_KEY, this.role);
+      setUserRole(this.role);
     },
   },
   // 持久化配置
   persist: {
     key: "user_state",
-    paths: ["token", "getInfo"],
+    paths: ["token", "getInfo","role"],
   },
 });
 

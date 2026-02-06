@@ -20,6 +20,10 @@ export const COACH_HOME_PATH = "/pages/tabbar/coach/index/index";
 
 // 通用路由常量
 /**
+ * 角色选择页
+ */
+export const SELECT_ROLE_PATH = "/pages/select-role/select-role";
+/**
  * 系统主页
  */
 export const HOME_PATH = "/pages/index/index";

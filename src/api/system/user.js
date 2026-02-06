@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import { parseStrEmpty } from "@/utils/ruoyi";
+import { parseStrEmpty } from "@/utils/common";
 
 // 查询用户列表
 export function listUser(query) {
@@ -68,6 +68,19 @@ export function changeUserStatus(userId, status) {
     method: 'put',
     data: data
   })
+}
+
+// 用户角色修改
+export function changeUserRole(userId, roleId) {
+  const data = {
+    userId,
+    roleId
+  }
+  return request({
+    url: '/system/user/changeUserRole',
+    method: 'put',
+    data: data
+  });
 }
 
 // 查询用户个人信息

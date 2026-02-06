@@ -48,7 +48,7 @@
 
         <br>
         <navigator url="/pages/index/index" open-type="navigate" class="link-type">
-            主页
+          主页
         </navigator>
 
         <view class="register-link" v-if="register">
@@ -72,6 +72,13 @@ import { onLoad } from '@dcloudio/uni-app';
 import { encrypt, decrypt } from "@/utils/jsencrypt";
 import useUserStore from '@/store/modules/user';
 import defaultSettings from '@/settings';
+
+import {
+  COACH, STUDENT, SYS_ROLE_KEYS, SYS_ROLES,
+  getRoleName,
+  SELECT_ROLE_PATH, STUDENT_HOME_PATH, COACH_HOME_PATH,
+  LOGIN_PATH,
+} from "@/utils/constants";
 
 const footerContent = defaultSettings.footerContent;
 const userStore = useUserStore()
@@ -176,66 +183,76 @@ const handleLogin = async () => {
 
     // 调用action的登录方法
     userStore.login(loginForm).then(() => {
-      // 模拟登录成功
+      // 登录成功
+      loading.value = false;
+      uni.hideLoading();
       uni.showToast({
         title: '登录成功',
         icon: 'success'
       });
-      // 跳转页面
-      if(redirect.value === undefined){
-        uni.reLaunch({
-          url: '/pages/index/index'
+      // 获取登录成功的用户信息
+      useUserStore().getInfo()
+        .then(() => {
         })
-      } else{
+        .catch((err) => {
+        useUserStore()
+          .logOut()
+          .then(() => {
+            uni.showToast({
+              title: err || "未登录",
+              icon: "none",
+            });
+            return;
+          });
+      });
+    // 跳转页面
+    if (redirect.value === undefined) {
+      // uni.reLaunch({
+      //   url: '/pages/index/index'
+      // })
+      uni.redirectTo({
+        url: SELECT_ROLE_PATH
+      });
+    } else {
+      console.log("登录成功，跳转页面：",)
+      // 防止登录页跳转登录页
+      if (redirect.value === LOGIN_PATH) {
+        uni.redirectTo({
+          url: SELECT_ROLE_PATH
+        });
+      } else {
         uni.redirectTo({
           url: redirect.value
-        })
+        });
       }
-      // uni.navigateTo({url:""})
-      // uni.reLaunch({
-      //   url: '/pages/home/home?id=456'
-      // })
-      // const query = route.query
-      // const otherQueryParams = Object.keys(query).reduce((acc, cur) => {
-      //   if (cur !== "redirect") {
-      //     acc[cur] = query[cur]
-      //   }
-      //   return acc
-      // }, {})
-      // router.push({ path: redirect.value || "/", query: otherQueryParams })
-
-    }).catch((res) => {
-      console.log(res)
-      loading.value = false
-      uni.hideLoading()
-      // 重新获取验证码
-      if (props.captchaEnabled) {
-        getCode()
-      }
-      uni.showToast({
-        title: '登录失败',
-        icon: 'none'
-      });
-    })
 
 
-    // // 跳转到首页
-    // setTimeout(() => {
-    //   uni.switchTab({
-    //     url: '/pages/index/index'
-    //   })
-    // }, 1500)
+    }
 
-  } catch (error) {
-    console.error('登录失败:', error)
-    uni.showToast({
-      title: error.message || '登录失败',
-      icon: 'none'
-    })
-  } finally {
+  }).catch ((res) => {
+    console.error("登录失败", res)
     loading.value = false
     uni.hideLoading()
-  }
+    // 重新获取验证码
+    if (props.captchaEnabled) {
+      getCode()
+    }
+    uni.showToast({
+      title: '登录失败',
+      icon: 'none'
+    });
+  })
+
+} catch (error) {
+  console.error('登录失败:', error)
+  uni.showToast({
+    title: error.message || '登录失败',
+    icon: 'none'
+  })
+} finally {
+  loading.value = false
+  uni.hideLoading()
+}
 }
 
 const getCode = () => {
@@ -263,16 +280,16 @@ const getLoginInfo = () => {
 }
 
 // 生命周期
-onLoad(( options ) => {
+onLoad((options) => {
   // console.log("options: ")
   // console.log(options)
   // 重置跳转参数
   redirect.value = undefined;
   // 有路由跳转参数
-  if(options.redirect != undefined){
+  if (options.redirect != undefined) {
     redirect.value = options.redirect;
   }
-    
+
   if (props.captchaEnabled) getCode();
   getLoginInfo();
 })

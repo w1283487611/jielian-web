@@ -1,5 +1,15 @@
-import { defineStore } from 'pinia'
-
+import { defineStore } from "pinia";
+import {
+  COACH, STUDENT, SYS_ROLE_KEYS
+} from "@/utils/constants";
+import {
+  getToken,
+  setToken,
+  removeToken,
+  getUserRole,
+  setUserRole,
+  removeUserRole,
+} from "@/utils/auth";
 /**
  * ===============================
  * 1️⃣ TabBar 配置（只作为“模板”，永不直接使用）
@@ -7,65 +17,65 @@ import { defineStore } from 'pinia'
  */
 const STUDENT_TAB_TEMPLATE = [
   {
-    pagePath: '/pages/tabbar/student/index/index',
-    text: '首页',
-    iconPath: '/static/assets/images/tabbar/home.png',
-    selectedIconPath: '/static/assets/images/tabbar/homeHL.png',
-    badge: 0
+    pagePath: "/pages/tabbar/student/index/index",
+    text: "首页",
+    iconPath: "/static/assets/images/tabbar/home.png",
+    selectedIconPath: "/static/assets/images/tabbar/homeHL.png",
+    badge: 0,
   },
   {
-    pagePath: '/pages/tabbar/student/appoint/appoint',
-    text: '预约',
-    iconPath: '/static/assets/images/tabbar/appoint.png',
-    selectedIconPath: '/static/assets/images/tabbar/appointHL.png',
-    badge: 0
+    pagePath: "/pages/tabbar/student/appoint/appoint",
+    text: "预约",
+    iconPath: "/static/assets/images/tabbar/appoint.png",
+    selectedIconPath: "/static/assets/images/tabbar/appointHL.png",
+    badge: 0,
   },
   {
-    pagePath: '/pages/tabbar/student/test/test',
-    text: '学员',
-    iconPath: '/static/assets/images/tabbar/personal.png',
-    selectedIconPath: '/static/assets/images/tabbar/personalHL.png',
-    badge: 0
+    pagePath: "/pages/tabbar/student/test/test",
+    text: "学员",
+    iconPath: "/static/assets/images/tabbar/personal.png",
+    selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
+    badge: 0,
   },
   {
-    pagePath: '/pages/tabbar/student/my/my',
-    text: '我的',
-    iconPath: '/static/assets/images/tabbar/personal.png',
-    selectedIconPath: '/static/assets/images/tabbar/personalHL.png',
-    badge: 0
-  }
-]
+    pagePath: "/pages/tabbar/student/my/my",
+    text: "我的",
+    iconPath: "/static/assets/images/tabbar/personal.png",
+    selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
+    badge: 0,
+  },
+];
 
 const COACH_TAB_TEMPLATE = [
   {
-    pagePath: '/pages/tabbar/coach/index/index',
-    text: '首页',
-    iconPath: '/static/assets/images/tabbar/home.png',
-    selectedIconPath: '/static/assets/images/tabbar/homeHL.png',
-    badge: 0
+    pagePath: "/pages/tabbar/coach/index/index",
+    text: "首页",
+    iconPath: "/static/assets/images/tabbar/home.png",
+    selectedIconPath: "/static/assets/images/tabbar/homeHL.png",
+    badge: 0,
   },
   {
-    pagePath: '/pages/tabbar/coach/category/category',
-    text: '分类',
-    iconPath: '/static/assets/images/tabbar/personal.png',
-    selectedIconPath: '/static/assets/images/tabbar/personalHL.png',
-    badge: 0
+    pagePath: "/pages/tabbar/coach/category/category",
+    text: "分类",
+    iconPath: "/static/assets/images/tabbar/personal.png",
+    selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
+    badge: 0,
   },
   {
-    pagePath: '/pages/tabbar/coach/cart/cart',
-    text: '教练',
-    iconPath: '/static/assets/images/tabbar/personal.png',
-    selectedIconPath: '/static/assets/images/tabbar/personalHL.png',
-    badge: 0
+    pagePath: "/pages/tabbar/coach/cart/cart",
+    text: "教练",
+    iconPath: "/static/assets/images/tabbar/personal.png",
+    selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
+    badge: 0,
   },
   {
-    pagePath: '/pages/tabbar/coach/my/my',
-    text: '我的',
-    iconPath: '/static/assets/images/tabbar/personal.png',
-    selectedIconPath: '/static/assets/images/tabbar/personalHL.png',
-    badge: 0
-  }
-]
+    pagePath: "/pages/tabbar/coach/my/my",
+    text: "我的",
+    iconPath: "/static/assets/images/tabbar/personal.png",
+    selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
+    badge: 0,
+  },
+];
 
 /**
  * ===============================
@@ -73,7 +83,7 @@ const COACH_TAB_TEMPLATE = [
  * ===============================
  */
 function cloneTabList(list) {
-  return list.map(item => ({ ...item }))
+  return list.map((item) => ({ ...item }));
 }
 
 /**
@@ -81,7 +91,7 @@ function cloneTabList(list) {
  * 3️⃣ Store 定义
  * ===============================
  */
-const useTabbarStore = defineStore('tabbar', {
+const useTabbarStore = defineStore("tabbar", {
   state: () => ({
     /** 当前 TabBar 列表（一定是“拷贝后的新对象”） */
     tabList: cloneTabList(STUDENT_TAB_TEMPLATE),
@@ -93,10 +103,7 @@ const useTabbarStore = defineStore('tabbar', {
     showTabBar: true,
 
     /** 不显示 TabBar 的页面 */
-    hideTabBarPages: [
-      '/pages/login/login',
-      '/pages/register/register'
-    ]
+    hideTabBarPages: ["/pages/login/login", "/pages/register/register"],
   }),
 
   actions: {
@@ -104,52 +111,62 @@ const useTabbarStore = defineStore('tabbar', {
      * 切换 Tab（只做合法 switchTab）
      */
     switchTab(index) {
-      if (index === this.selectedIndex) return
-      if (!this.tabList[index]) return
+      if (index === this.selectedIndex) return;
+      if (!this.tabList[index]) return;
 
-      this.selectedIndex = index
+      this.selectedIndex = index;
 
       uni.switchTab({
-        url: this.tabList[index].pagePath
-      })
+        url: this.tabList[index].pagePath,
+      });
     },
 
     /**
      * 更新 badge（安全写法）
      */
     updateBadge(index, count) {
-      if (!this.tabList[index]) return
+      if (!this.tabList[index]) return;
 
       this.tabList[index] = {
         ...this.tabList[index],
-        badge: count
-      }
+        badge: count,
+      };
     },
 
     /**
      * 根据路由显示 / 隐藏 TabBar
      */
     checkTabBarVisibility(route) {
-      this.showTabBar = !this.hideTabBarPages.includes(route)
+      this.showTabBar = !this.hideTabBarPages.includes(route);
     },
 
     /**
      * 切换角色的tabbar（核心逻辑）
      */
     switchRole(roleId) {
-      let role = '';
-      if(roleId === 3) role = 'coach';
-      else if(roleId === 4) role = 'student';
-      if (role !== 'student' && role !== 'coach') return
+      let role = "";
+      if (roleId === 3) role = "coach";
+      else if (roleId === 4) role = "student";
+      if (role !== "student" && role !== "coach") return;
 
-      this.role = role
-      this.selectedIndex = 0
+      this.selectedIndex = 0;
 
       this.tabList = cloneTabList(
-        role === 'coach'
-          ? COACH_TAB_TEMPLATE
-          : STUDENT_TAB_TEMPLATE
-      )
+        role === "coach" ? COACH_TAB_TEMPLATE : STUDENT_TAB_TEMPLATE
+      );
+    },
+
+    /**
+     * 切换角色的tabbar（核心逻辑）
+     */
+    setRole(role) {
+      if (!SYS_ROLE_KEYS.includes(role)) return;
+
+      this.selectedIndex = 0;
+
+      if(role === STUDENT.roleKey) this.tabList = cloneTabList(STUDENT_TAB_TEMPLATE);
+      else if(role === COACH.roleKey) this.tabList = cloneTabList(COACH_TAB_TEMPLATE);
+
     },
 
     /**
@@ -157,32 +174,27 @@ const useTabbarStore = defineStore('tabbar', {
      */
     initFromStorage() {
       try {
-        const saved = uni.getStorageSync('tabbar_state')
-        if (!saved) return
+        const saved = uni.getStorageSync("tabbar_state");
+        if (!saved) return;
 
-        const data = JSON.parse(saved)
+        const data = JSON.parse(saved);
 
-        if (data.role === 'student' || data.role === 'coach') {
-          this.role = data.role
-        }
-
+        const role = getUserRole();
         this.tabList = cloneTabList(
-          this.role === 'coach'
-            ? COACH_TAB_TEMPLATE
-            : STUDENT_TAB_TEMPLATE
-        )
+          role === "coach" ? COACH_TAB_TEMPLATE : STUDENT_TAB_TEMPLATE
+        );
 
-        if (typeof data.selectedIndex === 'number') {
-          this.selectedIndex = data.selectedIndex
+        if (typeof data.selectedIndex === "number") {
+          this.selectedIndex = data.selectedIndex;
         }
 
-        if (typeof data.showTabBar === 'boolean') {
-          this.showTabBar = data.showTabBar
+        if (typeof data.showTabBar === "boolean") {
+          this.showTabBar = data.showTabBar;
         }
       } catch (e) {
-        console.warn('[tabbar] 存储失败:', e)
+        console.warn("[tabbar] 存储失败:", e);
       }
-    }
+    },
   },
 
   /**
@@ -191,9 +203,9 @@ const useTabbarStore = defineStore('tabbar', {
    * ===============================
    */
   persist: {
-    key: 'tabbar_state',
-    paths: [ 'selectedIndex', 'showTabBar']
-  }
-})
+    key: "tabbar_state",
+    paths: ["selectedIndex", "showTabBar"],
+  },
+});
 
-export default useTabbarStore
+export default useTabbarStore;
