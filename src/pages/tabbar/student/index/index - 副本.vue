@@ -1,7 +1,7 @@
 <template>
-
+    <view>
         <view class="content">
-            教练主页
+            学员主页
             <br>
             <navigator url="/pages/login/login" open-type="navigate" class="link-type">
                 登录页
@@ -19,9 +19,7 @@
 
         <!-- 自定义 TabBar -->
         <tabbar />
-
-
-
+    </view>
 </template>
 
 <script setup>

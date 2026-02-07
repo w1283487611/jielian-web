@@ -105,6 +105,66 @@
 							// #endif
 						}
 					}
+				},
+				{
+					"path": "guide/guide",
+					"style": {
+						"navigationBarTitleText": "guide",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "my-coach/my-coach",
+					"style": {
+						"navigationBarTitleText": "学员coach",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "do-appoint/do-appoint",
+					"style": {
+						"navigationBarTitleText": "预约",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "appoint-detail/appoint-detail",
+					"style": {
+						"navigationBarTitleText": "预约详情",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
 				}
 			]
 		},

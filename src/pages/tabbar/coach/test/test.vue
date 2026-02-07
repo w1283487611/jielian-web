@@ -1,11 +1,11 @@
 <template>
-  <view>
+
       <view>
           Coach-test
       </view>
       <!-- 自定义 TabBar -->
       <tabbar />
-  </view>
+
 </template>
 
 <script setup lang="js">
