@@ -198,7 +198,7 @@ onLoad(() => {
     .catch((error) => {
       uni.showToast({
         title: `获取驾驶证列表失败，请与管理员联系: ${error}`,
-        type: 'info'
+        icon: 'none'
       });
       console.error(error);
     })

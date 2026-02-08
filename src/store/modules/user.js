@@ -92,7 +92,7 @@ const useUserStore = defineStore("user", {
             //     }
             //   )
             //     .then(() => {
-            //       // router.push({ name: 'Profile', params: { activeTab: 'resetPwd' } })
+            //       // 路由跳转({ name: 'Profile', params: { activeTab: 'resetPwd' } })
             //       console.log("路由跳转");
             //     })
             //     .catch(() => {});
@@ -109,7 +109,7 @@ const useUserStore = defineStore("user", {
             //     }
             //   )
             //     .then(() => {
-            //       // router.push({ name: 'Profile', params: { activeTab: 'resetPwd' } })
+            //       // 路由跳转({ name: 'Profile', params: { activeTab: 'resetPwd' } })
             //       console.log("路由跳转");
             //     })
             //     .catch(() => {});
@@ -150,10 +150,10 @@ const useUserStore = defineStore("user", {
     },
   },
   // 持久化配置
-  persist: {
-    key: "user_state",
-    paths: ["token", "getInfo","role"],
-  },
+  // persist: {
+  //   key: "user_state",
+  //   paths: ["token", "getInfo","role"],
+  // },
 });
 
 export default useUserStore;

@@ -113,13 +113,11 @@ const useTabbarStore = defineStore("tabbar", {
     switchTab(index) {
       if (index === this.selectedIndex) return;
       if (!this.tabList[index]) return;
-      // 先跳路由
+
+      this.selectedIndex = index;
+
       uni.switchTab({
         url: this.tabList[index].pagePath,
-        success: () => {
-          // 再改状态
-          this.selectedIndex = index;
-        }
       });
     },
 
@@ -204,14 +202,10 @@ const useTabbarStore = defineStore("tabbar", {
    * 4️⃣ 持久化（只存“最小必要数据”）
    * ===============================
    */
-  persist: {
-    key: "tabbar_state",
-    paths: ["selectedIndex", "showTabBar"],
-  },
-  unistorage: {// 这里是Store的配置选项
-    key: "tabbar_state",
-    paths: ["selectedIndex", "showTabBar"],
-  }
+  // persist: {
+  //   key: "tabbar_state",
+  //   paths: ["selectedIndex", "showTabBar"],
+  // },
 });
 
 export default useTabbarStore;

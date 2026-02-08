@@ -196,51 +196,6 @@
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
-	"tabBar": {
-		// #ifdef MP-WEIXIN
-		"custom": true,
-		"list": [
-			{
-				"pagePath": "pages/index/index",
-				"text": "首页",
-				"iconPath": "/static/assets/images/tabbar/home.png",
-				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
-			}
-			,
-			// 学员tabbar
-			{
-				"pagePath": "pages/tabbar/student/index/index",
-				"text": "首页",
-				"iconPath": "/static/assets/images/tabbar/home.png",
-				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
-			}
-			,
-			{
-				"pagePath": "pages/tabbar/student/appoint/appoint",
-				"text": "预约",
-				"iconPath": "/static/assets/images/tabbar/appoint.png",
-				"selectedIconPath": "/static/assets/images/tabbar/appointHL.png",
-			},
-			{
-				"pagePath": "pages/tabbar/student/my/my",
-				"text": "我的",
-				"iconPath": "/static/assets/images/tabbar/personal.png",
-				"selectedIconPath": "/static/assets/images/tabbar/personalHL.png",
-			},
-			// 教练tabbar
-			{
-				"pagePath": "pages/tabbar/coach/index/index",
-				"text": "首页",
-				"iconPath": "/static/assets/images/tabbar/home.png",
-				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
-			}
-		],
-		// #endif 
-		"color": "#7A7E83",
-		"selectedColor": "#007AFF",
-		"borderStyle": "black",
-		"backgroundColor": "#FFFFFF"
-	},
 	"condition": {
 		"current": 0,
 		"list": [

@@ -9,6 +9,7 @@
         教练页
       </navigator>
       <button @click="getUserInfo">getUserInfo</button>
+      <!-- <button @click="tabbarStore.test()">testThis</button> -->
       <button @click="getTabbar(3)">教练</button>
       <button @click="getTabbar(4)">学员</button>
       <image class="logo" src="/static/logo.png"></image>

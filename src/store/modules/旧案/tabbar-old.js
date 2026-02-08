@@ -144,7 +144,7 @@ const useTabbarStore = defineStore('tabbar', {
       try {
         const savedData = uni.getStorageSync('tabbar_state')
         if (savedData) {
-          Object.assign(this.$state, JSON.parse(savedData))
+          // Object.assign(this.$state, JSON.parse(savedData))
         }
       } catch (e) {
         console.error('从本地存储初始化 TabBar 失败:', e)

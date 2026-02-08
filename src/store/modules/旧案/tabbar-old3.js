@@ -208,10 +208,6 @@ const useTabbarStore = defineStore("tabbar", {
     key: "tabbar_state",
     paths: ["selectedIndex", "showTabBar"],
   },
-  unistorage: {// 这里是Store的配置选项
-    key: "tabbar_state",
-    paths: ["selectedIndex", "showTabBar"],
-  }
 });
 
 export default useTabbarStore;

@@ -1,6 +1,4 @@
 <template>
-    <!-- <view v-if="showTabBar" class="custom-tabbar"> -->
-    <!-- <view v-show="showTabBar" class="custom-tabbar"> -->
     <view v-if="showTabBar" class="custom-tabbar">
         <view class="tabbar-item" v-for="(item, index) in tabList" :key="index" @click="switchTab(index)">
             <!-- 图标容器 -->
@@ -24,15 +22,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import useTabbarStore from '@/store/modules/tabbar';
-// import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import useTabbarStore from '@/store/modules/tabbar'
+import { storeToRefs } from 'pinia'
 
 const tabbarStore = useTabbarStore()
-// const { tabList, selectedIndex, showTabBar } = storeToRefs(tabbarStore)
-const tabList = computed(() => tabbarStore.tabList)
-const selectedIndex = computed(() => tabbarStore.selectedIndex)
-const showTabBar = computed(() => tabbarStore.showTabBar)
+const { tabList, selectedIndex, showTabBar } = storeToRefs(tabbarStore)
 
 const switchTab = (index) => {
     tabbarStore.switchTab(index)

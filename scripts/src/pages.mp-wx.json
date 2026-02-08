@@ -196,25 +196,27 @@
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
+	// #ifdef MP-WEIXIN
 	"tabBar": {
-		// #ifdef MP-WEIXIN
 		"custom": true,
+		"color": "#7A7E83",
+		"selectedColor": "#007AFF",
+		"borderStyle": "black",
+		"backgroundColor": "#FFFFFF",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
 				"text": "首页",
 				"iconPath": "/static/assets/images/tabbar/home.png",
 				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
-			}
-			,
+			},
 			// 学员tabbar
 			{
 				"pagePath": "pages/tabbar/student/index/index",
 				"text": "首页",
 				"iconPath": "/static/assets/images/tabbar/home.png",
 				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
-			}
-			,
+			},
 			{
 				"pagePath": "pages/tabbar/student/appoint/appoint",
 				"text": "预约",
@@ -234,13 +236,9 @@
 				"iconPath": "/static/assets/images/tabbar/home.png",
 				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
 			}
-		],
-		// #endif 
-		"color": "#7A7E83",
-		"selectedColor": "#007AFF",
-		"borderStyle": "black",
-		"backgroundColor": "#FFFFFF"
+		]
 	},
+	// #endif  
 	"condition": {
 		"current": 0,
 		"list": [

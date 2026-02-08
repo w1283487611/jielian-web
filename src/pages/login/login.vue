@@ -22,6 +22,8 @@
         </view>
       </view>
 
+
+
       <view class="form-item" v-if="captchaEnabled">
         <view class="input-wrapper">
           <uni-icons v-if="useUniIcons" type="image" size="20" color="#999" class="input-icon" />
@@ -84,25 +86,16 @@ const footerContent = defaultSettings.footerContent;
 const userStore = useUserStore()
 // 登录跳转
 const redirect = ref(undefined)
-// 定义 props
-const props = defineProps({
-  title: {
-    type: String,
-    default: '系统登录'
-  },
+
+const title = ref("系统登录");
+const captchaEnabled = ref(false);
+const register = ref(false);
+
   // footerContent: {
   //   type: String,
   //   default: 'Copyright © 2023'
   // },
-  captchaEnabled: {
-    type: Boolean,
-    default: false
-  },
-  register: {
-    type: Boolean,
-    default: false
-  }
-})
+
 
 // 响应式数据
 const loginForm = reactive({
@@ -141,7 +134,7 @@ const handleLogin = async () => {
     return
   }
 
-  if (props.captchaEnabled && !loginForm.code.trim()) {
+  if (captchaEnabled.value && !loginForm.code.trim()) {
     uni.showToast({
       title: '请输入验证码',
       icon: 'none'
@@ -234,7 +227,7 @@ const handleLogin = async () => {
     loading.value = false
     uni.hideLoading()
     // 重新获取验证码
-    if (props.captchaEnabled) {
+    if (captchaEnabled.value) {
       getCode()
     }
     uni.showToast({
@@ -290,7 +283,7 @@ onLoad((options) => {
     redirect.value = options.redirect;
   }
 
-  if (props.captchaEnabled) getCode();
+  if (captchaEnabled.value) getCode();
   getLoginInfo();
 })
 
