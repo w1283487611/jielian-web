@@ -8,3 +8,12 @@ export function getInfo() {
       method: 'get'
     })
 }
+
+// 修改学员
+export function updateStudent(data) {
+  return request({
+    url: '/student',
+    method: 'put',
+    data: data
+  })
+}

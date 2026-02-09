@@ -57,7 +57,7 @@ const beforeEach = (args) => {
     } 
     if (args.url === loginPath) {
       //已经登录，防止二次登录
-      uni.showToast({title:"您已登录，无需再次登录",icon:"none"})
+      uni.showToast({title:"您已登录，无需再次登录",icon:"none"});
       args.url = indexPath;
       // #ifdef H5
       NProgress.done();

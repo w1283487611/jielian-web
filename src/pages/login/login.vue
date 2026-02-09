@@ -203,14 +203,16 @@ const handleLogin = async () => {
       // uni.reLaunch({
       //   url: '/pages/index/index'
       // })
-      uni.redirectTo({
+      // uni.redirectTo({
+      uni.reLaunch({
         url: SELECT_ROLE_PATH
       });
     } else {
       console.log("登录成功，跳转页面：",)
       // 防止登录页跳转登录页
       if (redirect.value === LOGIN_PATH) {
-        uni.redirectTo({
+        // uni.redirectTo({
+        uni.reLaunch({
           url: SELECT_ROLE_PATH
         });
       } else {

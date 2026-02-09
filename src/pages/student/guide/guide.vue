@@ -13,13 +13,15 @@
     <view class="content-area">
       <!-- 步骤1：选择驾照 -->
       <view v-if="currentStep === 1" class="step-content">
-        <view class="title">您想考取哪种驾照？</view>
+        <view class="title">
+          <view class="l-title">您想考取哪种驾照？</view>
+          <view class="r-title red-tag">必选</view>
+        </view>
         <!-- 滚动组件 -->
         <scroll-view class="grid-scroll" scroll-y :enhanced="true" :style="{ height: licenseScrollHeight }">
           <view class="grid-layout">
             <view v-for="license in licenses" :key="license.id" class="card-select"
-              :class="{ selected: form.licenseId === license.id }"
-              @click="handleLicense(license)">
+              :class="{ selected: form.licenseId === license.id }" @click="handleLicense(license)">
               <text class="card-icon">🚗</text>
               <text class="card-text">{{ license.code }} {{ license.name }}</text>
               <!-- <text>{{ license.code }}</text> -->
@@ -41,7 +43,11 @@
 
       <!-- 步骤2：选择驾校 -->
       <view v-if="currentStep === 2" class="step-content">
-        <view class="title">请选择服务的驾校</view>
+        <view class="title">
+          <view class="l-title">请选择服务的驾校</view>
+          <view class="r-title" @click="saveLicense">以后再选</view>
+        </view>
+        
         <scroll-view scroll-y class="list-scroll">
           <view v-for="school in schoolList" :key="school.id" class="list-item"
             :class="{ selected: form.schoolId === school.id }" @click="selectSchool(school)">
@@ -56,18 +62,21 @@
 
       <!-- 步骤3：选择主教练 -->
       <view v-if="currentStep === 3" class="step-content">
-        <view class="title">绑定您的主教练</view>
+        <view class="title">
+          <view class="l-title">绑定您的主教练</view>
+          <view class="r-title" @click="saveLicenseAndSchool">以后再选</view>
+        </view>
         <view class="subtitle">主教练将负责您的主要教学进度</view>
         <scroll-view scroll-y class="list-scroll">
           <view v-for="coach in coachList" :key="coach.id" class="coach-card"
-            :class="{ selected: form.mainCoachId === coach.id }" @click="form.mainCoachId = coach.id">
+            :class="{ selected: form.coachId === coach.id }" @click="form.coachId = coach.id">
             <image :src="coach.avatar" class="avatar" mode="aspectFill"></image>
             <view class="coach-info">
               <view class="coach-name">{{ coach.name }} <text class="tag">金牌</text></view>
               <view class="coach-rate">评分 {{ coach.rate }} | 教龄 {{ coach.years }}年</view>
             </view>
-            <button class="select-btn" :class="{ active: form.mainCoachId === coach.id }">
-              {{ form.mainCoachId === coach.id ? '已选' : '选择' }}
+            <button class="select-btn" :class="{ active: form.coachId === coach.id }">
+              {{ form.coachId === coach.id ? '已选' : '选择' }}
             </button>
           </view>
         </scroll-view>
@@ -87,43 +96,49 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
 
-// import { useUserStore } from '@/stores/user';
+// import useUserStore from '@/store/user';
+import useStudentStore from '@/store/modules/student';
+
 import { listLicense } from "@/api/client/license";
 import { listSubjectByLicenseId, tagListSubjectByLicenseId } from "@/api/client/subject";
+import { updateStudent } from "@/api/student/student";
 import {
   STUDENT_HOME_PATH,
 } from "@/utils/constants";
 import { getStudent, setStudent, getStudy, setStudy } from "@/utils/student";
 import {
-  STUDENT_STORAGE_KEY, 
+  STUDENT_STORAGE_KEY,
 } from "@/utils/constants";
+
+const studentStore = useStudentStore();
 
 const currentStep = ref(1);
 const form = reactive({
   licenseId: null,
   subjectId: null,
-  subject: '科目二', // 默认
+  subjectName: '科目二', // 默认
   schoolId: null,
-  mainCoachId: null,
-  
+  coachId: null,
+
 });
 
+const licenses = ref([]);
 // 模拟数据
-const licenses = ref([
-  {
-    id: 1, code: 'C1', name: '小型汽车手动挡',
-    subjects: [
-      { id: 1, name: '科目一',  type: 2},// 科目类型，1：实操，2：理论
-      { id: 2, name: '科目二' },
-      { id: 3, name: '科目三' },
+// const licenses = ref([
+//   {
+//     id: 1, code: 'C1', name: '小型汽车手动挡',
+//     subjects: [
+//       { id: 1, name: '科目一',  type: 2},// 科目类型，1：实操，2：理论
+//       { id: 2, name: '科目二' },
+//       { id: 3, name: '科目三' },
 
 
-    ]
-  },
-  { id: 2, code: 'C2', name: '小型汽车手动挡', subjects: [] },
-  { id: 3, code: 'C3', name: '小型汽车手动挡', subjects: [] },
+//     ]
+//   },
+//   { id: 2, code: 'C2', name: '小型汽车手动挡', subjects: [] },
+//   { id: 3, code: 'C3', name: '小型汽车手动挡', subjects: [] },
 
-]);
+// ]);
 
 // const licenses = ref([
 //   { id: 1, code: 'C1', name: '小型汽车手动挡', subjects:[{id:1,name:'科目一'},]},
@@ -147,16 +162,48 @@ const selectSchool = (school) => {
 
 const nextStep = () => {
   if (currentStep.value === 1) {
-    if(!form.licenseId) return uni.showToast({ title: '请选择驾照类型', icon: 'none' });
+    if (!form.licenseId) return uni.showToast({ title: '请选择驾照类型', icon: 'none' });
     // 存储状态
 
-  } 
+  }
   if (currentStep.value === 2 && !form.schoolId) return uni.showToast({ title: '请选择驾校', icon: 'none' });
   currentStep.value++;
 };
 
-const submitSetup = () => {
-  if (!form.mainCoachId) return uni.showToast({ title: '请选择主教练', icon: 'none' });
+
+
+const saveLicense = async () => {
+  uni.showLoading({ title: '正在保存...' });
+
+  const study = {
+    id: studentStore.id,
+    licenseId: form.licenseId,
+    subjectId: form.subjectId
+  };
+  updateStudent(study).then((res)=>{
+    uni.hideLoading();
+    if(res.code === 200) {
+      studentStore.setStudy(study);
+      uni.showToast({title:"保存成功"});
+    } else{
+      uni.showToast({title:`系统${res.code}：${res.msg}`, icon:'none'});
+      console.error(error)
+    } 
+
+  }).catch((error)=>{
+    uni.hideLoading();
+    uni.showToast({title:`${error}`, icon:'none'});
+    console.error(error)
+  })
+  
+}
+
+const saveLicenseAndSchool = async () => {
+
+}
+
+const submitSetup = async () => {
+  if (!form.coachId) return uni.showToast({ title: '请选择主教练', icon: 'none' });
 
   uni.showLoading({ title: '系统初始化中...' });
   // TODO: 调用 API 保存用户设置，并获取初始统计数据
@@ -167,8 +214,8 @@ const submitSetup = () => {
 };
 
 const handleLicense = (license) => {
-  form.licenseId = form.licenseId === license.id ? '' : license.id;
-  form.subjectId = license.subjects[0].id
+  form.licenseId = form.licenseId === license.id ? null : license.id;
+  form.subjectId = license.subjects?.[0]?.id || null
 }
 const licenseScrollHeight = ref('800rpx');
 
@@ -189,9 +236,8 @@ const licenseScrollHeight = ref('800rpx');
 //     .exec()
 // }
 
-onLoad(() => {
-  // calculateScrollHeight();
-  listLicense({pageNum: 1, pageSize: 100 , subjectType: 1}).then((res) => {
+const getListLicense = () => {
+  listLicense({ pageNum: 1, pageSize: 100, subjectType: 1 }).then((res) => {
     // console.log(res);// {total:10,rows:[],code:200,msg:""}
     licenses.value = res.rows;
   })
@@ -202,6 +248,15 @@ onLoad(() => {
       });
       console.error(error);
     })
+}
+onLoad(() => {
+  // calculateScrollHeight();
+  getListLicense()
+});
+onShow(() => {
+  // #ifdef MP-WEIXIN
+  wx.hideHomeButton()
+  // #endif
 });
 </script>
 
@@ -255,6 +310,20 @@ onLoad(() => {
   font-weight: bold;
   margin-bottom: 30rpx;
   color: #333;
+  display: flex;
+  justify-content: space-between;
+}
+
+.l-title {
+
+}
+
+.r-title {
+  
+}
+
+.red-tag {
+  color: #d41313;
 }
 
 .subtitle {

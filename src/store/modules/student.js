@@ -8,6 +8,7 @@ const useStudentStore = defineStore(
     // 学员基本信息
     const isSetup = ref(false); // 是否已完成首次引导
 
+    const id = ref(null); // 学员id
     const licenseId = ref(null); // 当前练习驾驶证id
     const licenseCode = ref(""); // 当前练习驾驶证代码：C1, C2
     const vehicleType = ref(""); // 当前练习车型：小车
@@ -73,7 +74,7 @@ const useStudentStore = defineStore(
             // } else {
             //   this.roles = ["ROLE_DEFAULT"];
             // }
-            // this.id = student.id;
+            this.id = student.id;
             this.licenseId = student.licenseId;
             this.licenseName = student.licenseName;
             this.vehicleType = student.vehicleType;
@@ -99,6 +100,7 @@ const useStudentStore = defineStore(
       });
     }
 
+    
     // 完成首次设置
     function completeSetup(data) {
       licenseType.value = data.licenseType;
@@ -107,19 +109,22 @@ const useStudentStore = defineStore(
       isSetup.value = true;
     }
 
+
     // 更改当前科目
     function updateSubject(subject) {
       subject.value = subject;
     }
 
-    function setStudy({ licenseId, subjectId }) {
-      this.licenseId.value = licenseId;
-      this.subjectId.value = subjectId;
+    function setStudy(study) {
+      licenseId.value = study.licenseId;
+      subjectId.value = study.subjectId;
     }
+
+    
 
     return {
       isSetup,
-
+      id,
       licenseId,
       licenseCode,
       vehicleType,

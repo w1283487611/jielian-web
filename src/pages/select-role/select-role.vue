@@ -14,6 +14,7 @@
 
 <script setup lang="js">
 import Tabbar from "@/components/tabbar/index.vue";
+import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
 import { changeUserRole, } from "@/api/system/user";
 
 import useUserStore from "@/store/modules/user";
@@ -42,7 +43,11 @@ const setRole = (role) => {
         url: roleInfo.path
     });
 }
-
+onShow(() => {
+    // #ifdef MP-WEIXIN
+    wx.hideHomeButton()
+    // #endif
+})
 </script>
 
 <style scoped>

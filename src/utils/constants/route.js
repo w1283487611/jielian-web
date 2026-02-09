@@ -12,6 +12,22 @@ export const PLATFORM = {
 export const STUDENT_HOME_PATH = "/pages/tabbar/student/index/index";
 
 
+/**
+ * 学员引导页
+ */
+export const STUDENT_GUIDE_PATH = "/pages/student/guide/guide";
+
+/**
+ * 和教练进行预约页
+ */
+export const STUDENT_DO_APPOINT_PATH = "/pages/student/do-appoint/do-appoint"
+
+/**
+ * 预约详情页
+ */
+export const STUDENT_APPOINT_DETAIL_PATH = "/pages/student/appoint-detail/appoint-detail"
+
+
 // 教练路由常量
 /**
  * 教练主页

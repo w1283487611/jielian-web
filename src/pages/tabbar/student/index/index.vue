@@ -75,28 +75,56 @@ import useStudentStore from '@/store/modules/student';
 import { listLicense } from "@/api/client/license";
 import { listSubjectByLicenseId, tagListSubjectByLicenseId } from "@/api/client/subject";
 import {
-  STUDENT_HOME_PATH,
+    STUDENT_HOME_PATH,
 } from "@/utils/constants";
 import { getStudent, setStudent, getStudy, setStudy } from "@/utils/student";
 import {
-  STUDENT_STORAGE_KEY, 
+    STUDENT_STORAGE_KEY,
+
+    STUDENT_GUIDE_PATH, STUDENT_DO_APPOINT_PATH, STUDENT_APPOINT_DETAIL_PATH,
 } from "@/utils/constants";
 
 const userStore = useUserStore();
 const studentStore = useStudentStore();
+
+/**
+ * 去和教练进行预约页
+ * @param bookingId 
+ */
 const goToBooking = (coachId) => {
-    uni.navigateTo({ url: `/pages/student/do-appoint/do-appoint?coachId=${coachId}` });
+    uni.navigateTo({ url: `${STUDENT_DO_APPOINT_PATH}?coachId=${coachId}` });
 };
 
-const goToDetail = (bookingId) => {
-    uni.navigateTo({ url: `/pages/student/appoint-detail/appoint-detail?id=${bookingId}` });
+/**
+ * 去预约详情页
+ * @param appointId 
+ */
+const goToDetail = (appointId) => {
+    uni.navigateTo({ url: `${STUDENT_APPOINT_DETAIL_PATH}?id=${appointId}` });
 };
 
-onLoad(()=>{
-    studentStore.getInfo().then((res)=>{
-        console.log(res)
-    }).catch(()=>{})
-    // userStore.id
+/**
+ * 获取用户信息
+ */
+const getStuInfo = async () => {
+    studentStore.getInfo().then((res) => {
+        // console.log(res);
+        if (res.student.subjectId === undefined) {
+            // uni.navigateTo({url: STUDENT_GUIDE_PATH});
+            uni.reLaunch({ url: STUDENT_GUIDE_PATH })
+            // uni.redirectTo({
+            //     url: STUDENT_GUIDE_PATH
+            // })
+        }
+    }).catch((error) => {
+        uni.showToast({ title: `学员信息获取失败:${error}`, icon: 'none' });
+        console.error(error);
+    });
+}
+
+onLoad(() => {
+    getStuInfo();
+
 });
 </script>
 
