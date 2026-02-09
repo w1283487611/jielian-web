@@ -14,26 +14,19 @@
       <!-- 步骤1：选择驾照 -->
       <view v-if="currentStep === 1" class="step-content">
         <view class="title">您想考取哪种驾照？</view>
-        <!-- <scroll-view>
-          
-        </scroll-view> -->
-        <!-- <view>组件1</view>
-        <view>组件2
-          <view>内容</view>
-        </view> -->
-        <!-- <view class="grid-layout"> -->
+        <!-- 滚动组件 -->
         <scroll-view class="grid-scroll" scroll-y :enhanced="true" :style="{ height: licenseScrollHeight }">
           <view class="grid-layout">
             <view v-for="license in licenses" :key="license.id" class="card-select"
-              :class="{ selected: form.license === license.id }"
-              @click="form.license = form.license === license.id ? '' : license.id">
+              :class="{ selected: form.licenseId === license.id }"
+              @click="handleLicense(license)">
               <text class="card-icon">🚗</text>
               <text class="card-text">{{ license.code }} {{ license.name }}</text>
               <!-- <text>{{ license.code }}</text> -->
-              <view v-if="form.license === license.id">
+              <view v-if="form.licenseId === license.id">
                 <view v-for="subject in license.subjects" :key="subject.id" class="card-select sub-card-select"
                   :class="{ selected: form.subjectId === subject.id }"
-                  @click="form.subjectId = form.subjectId === subject.id ? '' : subject.id">
+                  @click.stop="form.subjectId = form.subjectId === subject.id ? '' : subject.id">
                   {{ subject.name }}
                 </view>
               </view>
@@ -92,38 +85,43 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue';
-import { onLoad, onShow, onReady } from '@dcloudio/uni-app'
-// 模拟 Pinia store 引用
+import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
+
 // import { useUserStore } from '@/stores/user';
 import { listLicense } from "@/api/client/license";
 import { listSubjectByLicenseId, tagListSubjectByLicenseId } from "@/api/client/subject";
 import {
   STUDENT_HOME_PATH,
 } from "@/utils/constants";
+import { getStudent, setStudent, getStudy, setStudy } from "@/utils/student";
+import {
+  STUDENT_STORAGE_KEY, 
+} from "@/utils/constants";
 
 const currentStep = ref(1);
 const form = reactive({
-  license: '',
-  subjectId: '',
+  licenseId: null,
+  subjectId: null,
+  subject: '科目二', // 默认
   schoolId: null,
   mainCoachId: null,
-  subject: '科目二' // 默认
+  
 });
 
 // 模拟数据
 const licenses = ref([
   {
-    id: '1', code: 'C1', name: '小型汽车手动挡',
+    id: 1, code: 'C1', name: '小型汽车手动挡',
     subjects: [
-      { id: '1', name: '科目一',  type: '2'},// 科目类型，1：实操，2：理论
-      { id: '2', name: '科目二' },
-      { id: '3', name: '科目三' },
+      { id: 1, name: '科目一',  type: 2},// 科目类型，1：实操，2：理论
+      { id: 2, name: '科目二' },
+      { id: 3, name: '科目三' },
 
 
     ]
   },
-  { id: '2', code: 'C2', name: '小型汽车手动挡', subjects: [] },
-  { id: '3', code: 'C3', name: '小型汽车手动挡', subjects: [] },
+  { id: 2, code: 'C2', name: '小型汽车手动挡', subjects: [] },
+  { id: 3, code: 'C3', name: '小型汽车手动挡', subjects: [] },
 
 ]);
 
@@ -148,7 +146,11 @@ const selectSchool = (school) => {
 };
 
 const nextStep = () => {
-  if (currentStep.value === 1 && !form.license) return uni.showToast({ title: '请选择驾照类型', icon: 'none' });
+  if (currentStep.value === 1) {
+    if(!form.licenseId) return uni.showToast({ title: '请选择驾照类型', icon: 'none' });
+    // 存储状态
+
+  } 
   if (currentStep.value === 2 && !form.schoolId) return uni.showToast({ title: '请选择驾校', icon: 'none' });
   currentStep.value++;
 };
@@ -164,33 +166,31 @@ const submitSetup = () => {
   }, 1500);
 };
 
-// const licenseScrollHeight = computed(()=> {
-//   const h = 1500;
-//   // return 1500rpx;
-//   return `${h}px`;
-// })
-// const licenseScrollHeight = ref('800rpx')
-const licenseScrollHeight = ref('auto');
-
-// 计算滚动区域高度
-const calculateScrollHeight = () => {
-  uni.createSelectorQuery()
-    .select('.title')
-    .boundingClientRect(data => {
-      if (data) {
-        // const systemInfo = uni.getSystemInfoSync()
-        const windowInfo = uni.getWindowInfo()
-        // console.log(windowInfo)
-        const windowHeight = windowInfo.windowHeight
-        const fixedHeight = data.height
-        licenseScrollHeight.value = `${(windowHeight - fixedHeight)*1.5}rpx`
-      }
-    })
-    .exec()
+const handleLicense = (license) => {
+  form.licenseId = form.licenseId === license.id ? '' : license.id;
+  form.subjectId = license.subjects[0].id
 }
+const licenseScrollHeight = ref('800rpx');
+
+// // 计算滚动区域高度
+// const calculateScrollHeight = () => {
+//   uni.createSelectorQuery()
+//     .select('.title')
+//     .boundingClientRect(data => {
+//       if (data) {
+//         // const systemInfo = uni.getSystemInfoSync()
+//         const windowInfo = uni.getWindowInfo()
+//         // console.log(windowInfo)
+//         const windowHeight = windowInfo.windowHeight
+//         const fixedHeight = data.height
+//         licenseScrollHeight.value = `${(windowHeight - fixedHeight)*1.5}rpx`
+//       }
+//     })
+//     .exec()
+// }
 
 onLoad(() => {
-  calculateScrollHeight();
+  // calculateScrollHeight();
   listLicense({pageNum: 1, pageSize: 100 , subjectType: 1}).then((res) => {
     // console.log(res);// {total:10,rows:[],code:200,msg:""}
     licenses.value = res.rows;

@@ -67,6 +67,23 @@
 
 <script setup>
 import Tabbar from "@/components/tabbar/index.vue";
+import { ref, reactive, computed } from 'vue';
+import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
+
+import useUserStore from '@/store/modules/user';
+import useStudentStore from '@/store/modules/student';
+import { listLicense } from "@/api/client/license";
+import { listSubjectByLicenseId, tagListSubjectByLicenseId } from "@/api/client/subject";
+import {
+  STUDENT_HOME_PATH,
+} from "@/utils/constants";
+import { getStudent, setStudent, getStudy, setStudy } from "@/utils/student";
+import {
+  STUDENT_STORAGE_KEY, 
+} from "@/utils/constants";
+
+const userStore = useUserStore();
+const studentStore = useStudentStore();
 const goToBooking = (coachId) => {
     uni.navigateTo({ url: `/pages/student/do-appoint/do-appoint?coachId=${coachId}` });
 };
@@ -74,6 +91,13 @@ const goToBooking = (coachId) => {
 const goToDetail = (bookingId) => {
     uni.navigateTo({ url: `/pages/student/appoint-detail/appoint-detail?id=${bookingId}` });
 };
+
+onLoad(()=>{
+    studentStore.getInfo().then((res)=>{
+        console.log(res)
+    }).catch(()=>{})
+    // userStore.id
+});
 </script>
 
 <style scoped lang="scss">

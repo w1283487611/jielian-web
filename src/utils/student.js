@@ -2,72 +2,93 @@
 import useStudentStore from "@/store/modules/student";
 
 import {
-  ROLE_STORAGE_KEY as RoleKey,
-  USER_STORAGE_KEY as UserKey,
-  TOKEN_STORAGE_KEY as TokenKey,
+  STUDENT_STORAGE_KEY, STUDENT_SUBJECT_ID_STORAGE_KEY
 } from "@/utils/constants";
 const studentStore = useStudentStore();
 
 // export function hasStudy() {
 //   if(studentStore.subjectId) return true;
 //   if()
-//   return uni.getStorageSync(TokenKey);
+//   return uni.getStorageSync(STUDENT_STORAGE_KEY);
 
 //   return false;
 // }
 
-// export function hasStudy() {
-//   if(studentStore.subjectId) return true;
-//   if()
-//   return uni.getStorageSync(TokenKey);
+export function hasStudy() {
+  if(studentStore.subjectId) return true;
+  if(uni.getStorageSync(STUDENT_SUBJECT_ID_STORAGE_KEY)) return true;
+  // return uni.getStorageSync(STUDENT_STORAGE_KEY);
 
-//   return false;
-// }
-// Storage 文件存储
+  return false;
+}
 /**
  *
  */
-export function getToken() {
-  return uni.getStorageSync(TokenKey);
+export function getStudy() {
+  const storeSID = studentStore.subjectId;
+  const storeLID = studentStore.licenseId;
+  if(storeSID && storeLID) return {subjectId: storeSID, licenseId: storeLID};
+  
+  const subjectId = uni.getStorageSync(STUDENT_SUBJECT_ID_STORAGE_KEY);
 }
 
-// 设置 Token
-export function setToken(token, expires = 7) {
+// 设置 Student
+export function setStudy({licenseId, subjectId}) {
+  try {
+    studentStore.setStudy({licenseId, subjectId});
+    uni.setStorageSync(STUDENT_SUBJECT_ID_STORAGE_KEY, subjectId);
+    return true;
+  } catch (error) {
+    console.error(error)
+    return false;
+  }
+}
+
+// Storage 存储
+/**
+ *
+ */
+export function getStudent() {
+  return uni.getStorageSync(STUDENT_STORAGE_KEY);
+}
+
+// 设置 Student
+export function setStudent(student, expires = 7) {
   // expires 参数保持兼容，但 UniApp 存储不支持自动过期
-  return uni.setStorageSync(TokenKey, token);
+  return uni.setStorageSync(STUDENT_STORAGE_KEY, student);
 }
 
-// 移除 Token
-export function removeToken() {
-  return uni.removeStorageSync(TokenKey);
+// 移除 Student
+export function removeStudent() {
+  return uni.removeStorageSync(STUDENT_STORAGE_KEY);
 }
 
 // 异步版本（可选）
-export async function getTokenAsync() {
+export async function getStudentAsync() {
   return new Promise((resolve, reject) => {
     uni.getStorage({
-      key: TokenKey,
+      key: STUDENT_STORAGE_KEY,
       success: (res) => resolve(res.data),
       fail: reject,
     });
   });
 }
 
-export async function setTokenAsync(token) {
+export async function setStudentAsync(student) {
   return new Promise((resolve, reject) => {
     uni.setStorage({
-      key: TokenKey,
-      data: token,
+      key: STUDENT_STORAGE_KEY,
+      data: student,
       success: resolve,
       fail: reject,
     });
   });
 }
 
-export async function removeTokenAsync() {
+export async function removeStudentAsync() {
   return new Promise((resolve, reject) => {
     uni.removeStorage({
-      key: TokenKey,
+      key: STUDENT_STORAGE_KEY,
       success: resolve,
       fail: reject,
     });

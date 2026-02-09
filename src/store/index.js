@@ -12,10 +12,12 @@ setActivePinia(store);
 import useTestStore from "./modules/test";
 import useUserStore from "./modules/user";
 import useTabbarStore from "./modules/tabbar";
+import useStudentStore from "./modules/student";
 
 const test = useTestStore(store);
 const user = useUserStore(store);
 const tabbar = useTabbarStore(store);
+const student = useStudentStore(store);
 // console.log(test);
 
 export default store;
