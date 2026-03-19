@@ -27,17 +27,18 @@ export default defineConfig(({ mode, command }) => {
     // 则设置 baseUrl 为 /admin/。
     base: VITE_APP_ENV === "production" ? "/" : "/",
     plugins: [
+      uni(),
       // 只需配置 uni 插件，并在其选项中传递 vue 的编译设置
-      uni({
-        vueOptions: {
-          template: {
-            compilerOptions: {
-              // 核心配置：将 uni- 开头的标签都视为自定义元素
-              isCustomElement: (tag) => tag.startsWith("uni-"),
-            },
-          },
-        },
-      }),
+      // uni({
+      //   vueOptions: {
+      //     template: {
+      //       compilerOptions: {
+      //         // 核心配置：将 uni- 开头的标签都视为自定义元素
+      //         isCustomElement: (tag) => tag.startsWith("uni-"),
+      //       },
+      //     },
+      //   },
+      // }),
 
       // createVitePlugins(env, command === 'build'),
     ],
