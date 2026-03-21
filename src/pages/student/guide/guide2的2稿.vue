@@ -21,6 +21,9 @@
           <text class="name">{{ item.name }}</text>
         </view>
       </view>
+      <view class="btn-group">
+        <button class="next-btn primary-btn" :disabled="!guideForm.licenseId" @click="nextStep">下一步，挑选驾校</button>
+      </view>
     </view>
 
     <view v-show="currentStep === 2" class="step-content animate-fade-in">
@@ -60,6 +63,12 @@
           </view>
         </view>
       </scroll-view>
+
+      <view class="btn-group">
+        <button class="prev-btn plain-btn" @click="prevStep">上一步</button>
+        <button class="skip-btn plain-btn" @click="skipSchool">跳过</button>
+        <button class="next-btn primary-btn" :disabled="!guideForm.schoolId" @click="nextStep">下一步</button>
+      </view>
     </view>
 
     <view v-show="currentStep === 3" class="step-content animate-fade-in">
@@ -100,24 +109,12 @@
           </view>
         </view>
       </scroll-view>
-    </view>
 
-    <view class="btn-group">
-      <template v-if="currentStep === 1">
-        <button class="next-btn primary-btn" @click="nextStep">下一步，挑选驾校</button>
-      </template>
-      
-      <template v-if="currentStep === 2">
+      <view class="btn-group">
         <button class="prev-btn plain-btn" @click="prevStep">上一步</button>
-        <button class="skip-btn plain-btn" @click="skipSchool">跳过</button>
-        <button class="next-btn primary-btn" @click="nextStep">下一步</button>
-      </template>
-
-      <template v-if="currentStep === 3">
-        <button class="prev-btn plain-btn" @click="prevStep">上一步</button>
-        <button class="skip-btn plain-btn" @click="submitGuide(true)">跳过</button>
-        <button class="next-btn primary-btn" @click="submitGuide(false)">完成设置</button>
-      </template>
+        <button class="skip-btn plain-btn" @click="submitGuide">跳过</button>
+        <button class="next-btn primary-btn" :disabled="!guideForm.coachId" @click="submitGuide">完成设置</button>
+      </view>
     </view>
   </view>
 </template>
@@ -135,9 +132,17 @@ const guideForm = reactive({
   coachId: null
 });
 
-const schoolQuery = reactive({ licenseId: null });
-const coachQuery = reactive({ schoolId: null, licenseId: null });
+// 查询参数状态
+const schoolQuery = reactive({
+  licenseId: null
+});
 
+const coachQuery = reactive({
+  schoolId: null,
+  licenseId: null
+});
+
+// 列表数据
 const licenseList = ref([]);
 const schoolList = ref([]);
 const coachList = ref([]);
@@ -145,6 +150,7 @@ const coachList = ref([]);
 onMounted(() => {
   fetchLicenseList();
   
+  // 监听从详情页返回的事件
   uni.$on('selectSchoolFromDetail', (id) => {
     guideForm.schoolId = id;
   });
@@ -159,7 +165,7 @@ onUnmounted(() => {
   uni.$off('selectCoachFromDetail');
 });
 
-// --- 数据请求部分 ---
+// 数据拉取模拟
 const fetchLicenseList = async () => {
   licenseList.value = [
     { id: 1, code: 'C1', name: '小型汽车手动挡' },
@@ -170,6 +176,7 @@ const fetchLicenseList = async () => {
 
 const fetchSchoolList = async () => {
   schoolQuery.licenseId = guideForm.licenseId;
+  // 实际开发中替换为后端请求，如：getSchoolList(schoolQuery)
   schoolList.value = [
     { id: 1, name: '顺达驾校', distance: 1.2, avgRating: 4.8, totalStudents: 3200, address: '天河区科韵路12号' },
     { id: 2, name: '平安驾校', distance: 3.5, avgRating: 4.9, totalStudents: 5100, address: '海珠区新港东路' }
@@ -179,16 +186,25 @@ const fetchSchoolList = async () => {
 const fetchCoachList = async () => {
   coachQuery.schoolId = guideForm.schoolId;
   coachQuery.licenseId = guideForm.licenseId;
+  // 实际开发中替换为后端请求，如：getCoachList(coachQuery)
   coachList.value = [
     { id: 101, nickName: '张建国', teachingYears: 8, rating: 4.9, totalStudents: 850, tags: ['脾气好', '通过率高'] },
     { id: 102, nickName: '李伟', teachingYears: 12, rating: 4.7, totalStudents: 1200, tags: ['严谨认真', '老教练'] }
   ];
 };
 
-// --- 选择与交互 ---
-const selectLicense = (id) => { guideForm.licenseId = id; };
-const selectSchool = (id) => { guideForm.schoolId = id; };
-const selectCoach = (id) => { guideForm.coachId = id; };
+// 交互操作
+const selectLicense = (id) => {
+  guideForm.licenseId = id;
+};
+
+const selectSchool = (id) => {
+  guideForm.schoolId = id;
+};
+
+const selectCoach = (id) => {
+  guideForm.coachId = id;
+};
 
 const onSchoolFilterChange = (filterData) => {
   Object.assign(schoolQuery, filterData);
@@ -200,15 +216,20 @@ const onCoachFilterChange = (filterData) => {
   fetchCoachList();
 };
 
+// 路由跳转
 const goToSchoolDetail = (schoolId) => {
-  uni.navigateTo({ url: `/pages/student/school-detail/school-detail?id=${schoolId}` });
+  uni.navigateTo({
+    url: `/pages/student/school-detail/school-detail?id=${schoolId}`
+  });
 };
 
 const goToCoachDetail = (coachId) => {
-  uni.navigateTo({ url: `/pages/student/coach-detail/coach-detail?id=${coachId}` });
+  uni.navigateTo({
+    url: `/pages/student/coach-detail/coach-detail?id=${coachId}`
+  });
 };
 
-// --- 步骤控制逻辑（含校验提示） ---
+// 步骤控制
 const prevStep = () => {
   if (currentStep.value > 1) {
     currentStep.value--;
@@ -216,50 +237,32 @@ const prevStep = () => {
 };
 
 const skipSchool = () => {
-  guideForm.schoolId = null; // 跳过则清空已选项
-  currentStep.value = 3;
-  fetchCoachList();
+  guideForm.schoolId = null;
+  nextStep();
 };
 
 const nextStep = () => {
   if (currentStep.value === 1) {
-    // 步骤一：未选驾照拦截
-    if (!guideForm.licenseId) {
-      uni.showToast({ title: '请先选择要考取的驾驶证', icon: 'none' });
-      return;
-    }
     currentStep.value = 2;
     fetchSchoolList();
   } else if (currentStep.value === 2) {
-    // 步骤二：未选驾校拦截
-    if (!guideForm.schoolId) {
-      uni.showToast({ title: '请选择意向驾校，或点击跳过', icon: 'none' });
-      return;
-    }
     currentStep.value = 3;
     fetchCoachList();
   }
 };
 
-const submitGuide = async (isSkip = false) => {
-  // 如果是跳过教练，清空选项；如果是提交，检查是否选中教练
-  if (isSkip) {
-    guideForm.coachId = null;
-  } else if (!guideForm.coachId) {
-    uni.showToast({ title: '请选择意向教练，或点击跳过', icon: 'none' });
-    return;
-  }
-
+const submitGuide = async () => {
   try {
     uni.showLoading({ title: '配置中...' });
-    // 模拟提交 API
+    // 模拟提交 API：await submitStudentInit(guideForm);
+    uni.hideLoading();
+    uni.showToast({ title: '设置成功', icon: 'success' });
+    
     setTimeout(() => {
-      uni.hideLoading();
-      uni.showToast({ title: '设置成功', icon: 'success' });
       uni.switchTab({
         url: '/pages/tabbar/student/index/index'
       });
-    }, 800);
+    }, 1000);
   } catch (error) {
     uni.hideLoading();
     uni.showToast({ title: '设置失败', icon: 'none' });
@@ -272,47 +275,85 @@ const submitGuide = async (isSkip = false) => {
   padding: 30rpx;
   background-color: #f5f7fa;
   min-height: 100vh;
-  /* 为底部固定的操作栏预留空间，防止内容被遮挡 */
-  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }
-
 .step-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 40rpx;
 }
-.step-item { color: #999; font-size: 28rpx; }
-.step-item.active { color: #007aff; font-weight: bold; }
-.step-line { flex: 1; height: 2rpx; background-color: #ddd; margin: 0 20rpx; }
-.title { font-size: 36rpx; font-weight: bold; margin-bottom: 10rpx; }
-.sub-title { font-size: 24rpx; color: #666; margin-bottom: 30rpx; }
+.step-item {
+  color: #999;
+  font-size: 28rpx;
+}
+.step-item.active {
+  color: #007aff;
+  font-weight: bold;
+}
+.step-line {
+  flex: 1;
+  height: 2rpx;
+  background-color: #ddd;
+  margin: 0 20rpx;
+}
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+.sub-title {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+}
 
-/* 驾照网格 */
-.grid-list { display: flex; flex-wrap: wrap; gap: 20rpx; }
+/* 驾照选择网格 */
+.grid-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
 .grid-item {
-  width: 47%; padding: 30rpx 0; text-align: center; background-color: #fff;
-  border-radius: 12rpx; border: 2rpx solid transparent;
+  width: 47%;
+  padding: 30rpx 0;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
   .code { font-size: 32rpx; font-weight: bold; display: block; margin-bottom: 10rpx;}
   .name { font-size: 24rpx; color: #666; }
 }
-.grid-item.selected { border-color: #007aff; background-color: #e6f2ff; .code, .name { color: #007aff; } }
-
-/* 滚动列表 */
-.list-view {
-  /* 动态计算高度，减去头部和底部固定栏的高度 */
-  height: calc(100vh - 460rpx - env(safe-area-inset-bottom));
+.grid-item.selected {
+  border-color: #007aff;
+  background-color: #e6f2ff;
+  .code, .name { color: #007aff; }
 }
 
+/* 列表卡片样式 */
+.list-view {
+  height: calc(100vh - 480rpx);
+}
 .rich-card {
-  background-color: #fff; border-radius: 16rpx; margin-bottom: 20rpx;
-  border: 2rpx solid transparent; overflow: hidden;
-  &.selected { border-color: #007aff; box-shadow: 0 4rpx 12rpx rgba(0,122,255,0.1); }
+  background-color: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  border: 2rpx solid transparent;
+  overflow: hidden;
+  &.selected {
+    border-color: #007aff;
+    box-shadow: 0 4rpx 12rpx rgba(0,122,255,0.1);
+  }
   
   .card-body {
-    display: flex; padding: 24rpx;
-    &:active { background-color: #f9f9f9; }
-    .card-left { margin-right: 24rpx; .avatar-img { width: 100rpx; height: 100rpx; border-radius: 12rpx; } }
+    display: flex;
+    padding: 24rpx;
+    &:active {
+      background-color: #f9f9f9;
+    }
+    .card-left {
+      margin-right: 24rpx;
+      .avatar-img { width: 100rpx; height: 100rpx; border-radius: 12rpx; }
+    }
     .card-right {
       flex: 1;
       .name-row { display: flex; justify-content: space-between; .name { font-size: 30rpx; font-weight: bold; } .distance, .exp { font-size: 24rpx; color: #999; } }
@@ -323,17 +364,27 @@ const submitGuide = async (isSkip = false) => {
   }
 
   .card-footer {
-    border-top: 1rpx solid #f0f0f0; padding: 16rpx 24rpx;
+    border-top: 1rpx solid #f0f0f0;
+    padding: 16rpx 24rpx;
     .select-btn {
-      width: 100%; height: 60rpx; line-height: 60rpx; font-size: 26rpx;
-      background-color: #f0f2f5; color: #333; border-radius: 30rpx;
-      &.is-selected { background-color: #e6f2ff; color: #007aff; border: 1px solid #007aff; }
+      width: 100%;
+      height: 60rpx;
+      line-height: 60rpx;
+      font-size: 26rpx;
+      background-color: #f0f2f5;
+      color: #333;
+      border-radius: 30rpx;
+      &.is-selected {
+        background-color: #e6f2ff;
+        color: #007aff;
+        border: 1px solid #007aff;
+      }
       &::after { border: none; }
     }
   }
 }
 
-/* 全局固定底栏 */
+// 底部按钮
 .btn-group {
   position: fixed;
   bottom: 0;
@@ -342,15 +393,26 @@ const submitGuide = async (isSkip = false) => {
   display: flex;
   gap: 20rpx;
   padding: 24rpx 30rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom)); /* 适配全面屏底部小黑条 */
   background-color: #fff;
-  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
-  z-index: 100;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08); /* 添加顶部阴影增加层次感 */
+  z-index: 100; /* 确保层级在最上面 */
 
-  .plain-btn { background-color: #f0f2f5; color: #666; flex: 1; font-size: 28rpx; margin: 0; }
-  .primary-btn { background-color: #007aff; color: #fff; flex: 2; font-size: 28rpx; margin: 0; }
+  .plain-btn { 
+    background-color: #f0f2f5; 
+    color: #666; 
+    flex: 1; 
+    font-size: 28rpx;
+    margin: 0; /* 清除默认外边距 */
+  }
+  .primary-btn { 
+    background-color: #007aff; 
+    color: #fff; 
+    flex: 2; 
+    font-size: 28rpx;
+    margin: 0; /* 清除默认外边距 */
+  }
 }
-
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in;
 }

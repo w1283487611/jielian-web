@@ -171,6 +171,32 @@
 							// #endif
 						}
 					}
+				},
+				{
+					"path": "school-detail/school-detail",
+					"style": {
+						"navigationBarTitleText": "驾校详情",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							"titleNView": {
+								"type": "default"
+							}
+						}
+					}
+				},
+				{
+					"path": "coach-detail/coach-detail",
+					"style": {
+						"navigationBarTitleText": "教练详情",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							"titleNView": {
+								"type": "default"
+							}
+						}
+					}
 				}
 			]
 		},

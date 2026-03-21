@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import request from '@/utils/request';
 import { parseStrEmpty } from "@/utils/common";
 
 // 获取用户详细信息
