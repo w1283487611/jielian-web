@@ -6,7 +6,7 @@ import cache from "@/plugins/cache";
 // #ifdef H5
 import { saveAs } from "file-saver";
 // #endif
-import useUserStore from "@/store/modules/user";
+// import useUserStore from "@/store/modules/user";
 import { uniappAdapter } from '@zebra-ui/axios-adapter'; // uniapp适配器
 
 let downloadLoadingInstance;
@@ -132,15 +132,15 @@ service.interceptors.response.use(
             if (res.confirm) {
               // 用户点击“重新登录”
               // 假设 useUserStore() 是你的状态管理函数
-              useUserStore()
-                .logOut()
-                .then(() => {
-                  // 重要：在 UniApp 中请勿使用 location.href
-                  // 应使用 UniApp 的路由 API 进行跳转
-                  uni.reLaunch({
-                    url: '/pages/index/index' // 请替换为你的首页实际路径
-                  });
-                });
+              // useUserStore()
+              //   .logOut()
+              //   .then(() => {
+              //     // 重要：在 UniApp 中请勿使用 location.href
+              //     // 应使用 UniApp 的路由 API 进行跳转
+              //     uni.reLaunch({
+              //       url: '/pages/index/index' // 请替换为你的首页实际路径
+              //     });
+              //   });
             } else if (res.cancel) {
               // 用户点击“取消”，仅隐藏提示，无需额外操作
               // isRelogin.show = false; 已在前面统一设置

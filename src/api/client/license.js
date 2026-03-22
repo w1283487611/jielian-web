@@ -9,6 +9,15 @@ export function listLicense(query) {
   })
 }
 
+// 查询具体驾驶证类型，定义每种驾驶证的详细信息列表
+export function getLicenseList(query) {
+  return request({
+    url: '/client/license/list',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询具体驾驶证类型，定义每种驾驶证的详细信息详细
 export function getLicense(id) {
   return request({

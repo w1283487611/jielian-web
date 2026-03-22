@@ -127,28 +127,39 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import SchoolFilter from '@/components/school-filter/school-filter.vue';
 import CoachFilter from '@/components/coach-filter/coach-filter.vue';
 
+// 引入后端 API 请求方法
+import { getLicenseList } from '@/api/client/license';
+import { getSchoolList } from '@/api/student/school';
+import { getCoachList } from '@/api/student/coach';
+import { submitStudentInit } from '@/api/student/student';
+
+
 const currentStep = ref(1);
 
+// 提交表单数据
 const guideForm = reactive({
   licenseId: null,
   schoolId: null,
   coachId: null
 });
 
+// 查询参数
 const schoolQuery = reactive({ licenseId: null });
 const coachQuery = reactive({ schoolId: null, licenseId: null });
 
+// 列表数据
 const licenseList = ref([]);
 const schoolList = ref([]);
 const coachList = ref([]);
 
 onMounted(() => {
+  // 页面加载时自动获取驾驶证列表
   fetchLicenseList();
   
+  // 监听从详情页返回的选中事件
   uni.$on('selectSchoolFromDetail', (id) => {
     guideForm.schoolId = id;
   });
-  
   uni.$on('selectCoachFromDetail', (id) => {
     guideForm.coachId = id;
   });
@@ -160,29 +171,64 @@ onUnmounted(() => {
 });
 
 // --- 数据请求部分 ---
+// 获取驾驶证列表
 const fetchLicenseList = async () => {
-  licenseList.value = [
-    { id: 1, code: 'C1', name: '小型汽车手动挡' },
-    { id: 2, code: 'C2', name: '小型汽车自动挡' },
-    { id: 3, code: 'D', name: '普通三轮摩托车' }
-  ];
+  // licenseList.value = [
+  //   { id: 1, code: 'C1', name: '小型汽车手动挡' },
+  //   { id: 2, code: 'C2', name: '小型汽车自动挡' },
+  //   { id: 3, code: 'D', name: '普通三轮摩托车' }
+  // ];
+  try {
+    const res = await getLicenseList();
+    if (res.code === 200) {
+      licenseList.value = res.rows;
+    } else {
+      uni.showToast({ title: res.msg || '获取驾驶证失败', icon: 'none' });
+    }
+  } catch (error) {
+    console.error('获取驾驶证列表异常:', error);
+  }
 };
 
+// 获取驾校列表
 const fetchSchoolList = async () => {
   schoolQuery.licenseId = guideForm.licenseId;
-  schoolList.value = [
-    { id: 1, name: '顺达驾校', distance: 1.2, avgRating: 4.8, totalStudents: 3200, address: '天河区科韵路12号' },
-    { id: 2, name: '平安驾校', distance: 3.5, avgRating: 4.9, totalStudents: 5100, address: '海珠区新港东路' }
-  ];
+  try {
+    uni.showLoading({ title: '加载驾校中...' });
+    const res = await getSchoolList(schoolQuery);
+    uni.hideLoading();
+    if (res.code === 200) {
+      schoolList.value = res.rows;
+    }
+  } catch (error) {
+    uni.hideLoading();
+    console.error('获取驾校列表异常:', error);
+  }
+  // schoolList.value = [
+  //   { id: 1, name: '顺达驾校', distance: 1.2, avgRating: 4.8, totalStudents: 3200, address: '天河区科韵路12号' },
+  //   { id: 2, name: '平安驾校', distance: 3.5, avgRating: 4.9, totalStudents: 5100, address: '海珠区新港东路' }
+  // ];
 };
 
+// 获取教练列表
 const fetchCoachList = async () => {
   coachQuery.schoolId = guideForm.schoolId;
   coachQuery.licenseId = guideForm.licenseId;
-  coachList.value = [
-    { id: 101, nickName: '张建国', teachingYears: 8, rating: 4.9, totalStudents: 850, tags: ['脾气好', '通过率高'] },
-    { id: 102, nickName: '李伟', teachingYears: 12, rating: 4.7, totalStudents: 1200, tags: ['严谨认真', '老教练'] }
-  ];
+  try {
+    uni.showLoading({ title: '加载教练中...' });
+    const res = await getCoachList(coachQuery);
+    uni.hideLoading();
+    if (res.code === 200) {
+      coachList.value = res.rows;
+    }
+  } catch (error) {
+    uni.hideLoading();
+    console.error('获取教练列表异常:', error);
+  }
+  // coachList.value = [
+  //   { id: 101, nickName: '张建国', teachingYears: 8, rating: 4.9, totalStudents: 850, tags: ['脾气好', '通过率高'] },
+  //   { id: 102, nickName: '李伟', teachingYears: 12, rating: 4.7, totalStudents: 1200, tags: ['严谨认真', '老教练'] }
+  // ];
 };
 
 // --- 选择与交互 ---
@@ -192,11 +238,13 @@ const selectCoach = (id) => { guideForm.coachId = id; };
 
 const onSchoolFilterChange = (filterData) => {
   Object.assign(schoolQuery, filterData);
+  // 参数变化后重新请求
   fetchSchoolList();
 };
 
 const onCoachFilterChange = (filterData) => {
   Object.assign(coachQuery, filterData);
+  // 参数变化后重新请求
   fetchCoachList();
 };
 
@@ -241,6 +289,7 @@ const nextStep = () => {
   }
 };
 
+// 提交最终配置至后端
 const submitGuide = async (isSkip = false) => {
   // 如果是跳过教练，清空选项；如果是提交，检查是否选中教练
   if (isSkip) {
@@ -253,16 +302,32 @@ const submitGuide = async (isSkip = false) => {
   try {
     uni.showLoading({ title: '配置中...' });
     // 模拟提交 API
-    setTimeout(() => {
-      uni.hideLoading();
+    // setTimeout(() => {
+    //   uni.hideLoading();
+    //   uni.showToast({ title: '设置成功', icon: 'success' });
+    //   uni.switchTab({
+    //     url: '/pages/tabbar/student/index/index'
+    //   });
+    // }, 800);
+    // 发起真实请求保存学员初始配置
+    const res = await submitStudentInit(guideForm);
+    uni.hideLoading();
+    
+    if (res.code === 200) {
       uni.showToast({ title: '设置成功', icon: 'success' });
-      uni.switchTab({
-        url: '/pages/tabbar/student/index/index'
-      });
-    }, 800);
+      // 延迟跳转至学员首页，给予 Toast 显示时间
+      setTimeout(() => {
+        uni.switchTab({
+          url: '/pages/tabbar/student/index/index'
+        });
+      }, 800);
+    } else {
+      uni.showToast({ title: res.msg || '设置失败', icon: 'none' });
+    }
   } catch (error) {
     uni.hideLoading();
-    uni.showToast({ title: '设置失败', icon: 'none' });
+    uni.showToast({ title: '网络异常，请重试', icon: 'none' });
+    console.error('提交引导配置异常:', error);
   }
 };
 </script>
