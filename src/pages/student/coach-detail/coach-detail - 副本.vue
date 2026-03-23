@@ -2,7 +2,7 @@
     <view class="detail-container">
         <view class="profile-section base-box">
             <view class="main-info">
-                <image class="avatar" :src="handleAvatar(coachData.avatar)" mode="aspectFill"></image>
+                <image class="avatar" :src="coachData.avatar" mode="aspectFill"></image>
                 <view class="info-right">
                     <view class="name-line">
                         <text class="name">{{ coachData.name }} 教练</text>
@@ -15,51 +15,36 @@
                     </view>
                 </view>
             </view>
-            <view class="intro-box" v-if="coachData.shortIntro">
+            <view class="intro-box">
                 <text class="quote-icon">“</text>
                 <text class="intro-text">{{ coachData.shortIntro }}</text>
                 <text class="quote-icon right">”</text>
             </view>
         </view>
 
-        <view class="coach-media-section base-box" v-if="mediaList.length > 0">
-            <view class="section-title">教练风采</view>
-            <scroll-view scroll-x class="media-scroll">
-                <view class="media-item" v-for="media in mediaList" :key="media.fileId">
-                    <view class="media-content">
-                        <image v-if="media.category === 2" class="media-cover" :src="handleImageUrl(media.thumbnailUrl)"
-                            mode="aspectFill"></image>
-                        <image v-else class="media-cover" :src="handleImageUrl(media.accessUrl)" mode="aspectFill">
-                        </image>
-                        <view class="play-icon-mask" v-if="media.category === 2">
-                            <text class="iconfont icon-play"></text>
-                        </view>
-                    </view>
-                    <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
-                </view>
-            </scroll-view>
-        </view>
-
         <view class="feed-section base-box" v-if="feedList.length > 0">
             <view class="section-title">教练动态</view>
             <scroll-view scroll-x class="feed-scroll">
                 <view class="feed-card" v-for="feed in feedList" :key="feed.id">
-                    <image class="feed-cover" :src="handleImageUrl(feed.coverUrl)" mode="aspectFill"></image>
+                    <image class="feed-cover" :src="feed.coverUrl" mode="aspectFill"></image>
                     <view class="feed-content">{{ feed.content }}</view>
                 </view>
             </scroll-view>
         </view>
 
-        <view class="review-section base-box" v-if="reviewList.length > 0">
+        <view class="review-section base-box">
             <view class="section-title">精选评价 ({{ coachData.totalRatings }})</view>
             <view class="review-list">
                 <view class="review-item" v-for="review in reviewList" :key="review.id">
                     <view class="reviewer-line">
-                        <image class="reviewer-avatar" :src="handleAvatar(review.userAvatar)" mode="aspectFill"></image>
+                        <image class="reviewer-avatar" :src="review.userAvatar" mode="aspectFill"></image>
                         <text class="reviewer-name">{{ review.userName }}</text>
                         <text class="review-time">{{ review.createdAt }}</text>
                     </view>
                     <view class="review-content">{{ review.content }}</view>
+                    <view class="review-tags" v-if="review.tags">
+                        <text class="rtag" v-for="(t, i) in review.tags.split(',')" :key="i">{{ t }}</text>
+                    </view>
                 </view>
             </view>
         </view>
@@ -76,7 +61,6 @@
 import { ref, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getCoachDetail } from '@/api/student/coach';
-import { handleAvatar, handleImageUrl } from '@/utils/common'; // 引入全局媒体处理工具
 
 const coachId = ref(null);
 
@@ -91,7 +75,6 @@ const coachData = reactive({
     shortIntro: ''
 });
 
-const mediaList = ref([]);
 const feedList = ref([]);
 const reviewList = ref([]);
 
@@ -111,18 +94,29 @@ const fetchCoachDetail = async (id) => {
         if (res.code === 200 && res.data) {
             const data = res.data;
 
+            // // 处理 tags 字符串转数组 (兼容后端可能传回的 JSON 字符串或逗号分隔符)
+            // let parsedTags = [];
+            // if (data.tags) {
+            //     try {
+            //         // 尝试按 JSON 数组解析
+            //         parsedTags = JSON.parse(data.tags);
+            //     } catch (e) {
+            //         // 解析失败则按逗号分割
+            //         parsedTags = data.tags.split(',');
+            //     }
+            // }
+
             Object.assign(coachData, {
-                name: data.name || '未知教练',
-                avatar: data.avatar || '',
+                name: data.name,
+                avatar: data.avatar || '/static/assets/images/noUser.jpg', // 提供默认头像兜底
                 teachingYears: data.teachingYears || 0,
                 totalStudents: data.totalStudents || 0,
                 rating: data.rating || 0,
                 totalRatings: data.totalRatings || 0,
-                tags: data.tags || [], // 后端直传 List<String>，直接赋值
+                tags: data.tags || [], // 后端直接返回了数组，极其丝滑
                 shortIntro: data.shortIntro || '该教练很懒，暂无简介~'
             });
 
-            mediaList.value = data.mediaList || [];
             feedList.value = data.feedList || [];
             reviewList.value = data.reviewList || [];
         } else {
@@ -132,10 +126,40 @@ const fetchCoachDetail = async (id) => {
         uni.hideLoading();
         console.error('获取教练详情异常:', error);
     }
+
+    // uni.showLoading({ title: '加载中' });
+
+    // // 模拟合并了 coach, coach_statistic, user 表的数据
+    // Object.assign(coachData, {
+    //     name: '张建国',
+    //     avatar: '/static/assets/images/profile.jpg',
+    //     teachingYears: 8,
+    //     totalStudents: 850,
+    //     rating: 4.9,
+    //     totalRatings: 326,
+    //     tags: ['脾气好', '通过率高', '不抽烟'],
+    //     shortIntro: '从事驾培行业8年，总结了一套通俗易懂的练车技巧。对待学员耐心细致，承诺绝不吃拿卡要，希望能帮助大家轻松拿证，安全驾驶。'
+    // });
+
+    // // 模拟 coach_feed 动态数据
+    // feedList.value = [
+    //     { id: 1, content: '今天科二考试全员一把过！大家辛苦了！', coverUrl: '/static/assets/images/login-background.jpg' },
+    //     { id: 2, content: '倒车入库点位讲解小视频，建议收藏。', coverUrl: '/static/assets/images/login-background.png' }
+    // ];
+
+    // // 模拟 review 评价数据
+    // reviewList.value = [
+    //     { id: 1, userName: '李*明', userAvatar: '/static/assets/images/profile.jpg', createdAt: '2026-03-15', content: '张教练真的很有耐心，我科二挂了一次，教练一直鼓励我帮我找原因，第二次终于过了！', tags: '耐心指导,专业规范' },
+    //     { id: 2, userName: '王*芳', userAvatar: '/static/assets/images/profile.jpg', createdAt: '2026-03-10', content: '练车环境很好，教练车里很干净，教练也不抽烟，教学方法很容易懂。', tags: '脾气好' }
+    // ];
+
+    // uni.hideLoading();
 };
 
 const selectAndBack = () => {
+    // 触发全局事件，通知引导页更新选中的教练ID
     uni.$emit('selectCoachFromDetail', coachId.value);
+    // 返回上一页
     uni.navigateBack();
 };
 </script>
@@ -144,7 +168,6 @@ const selectAndBack = () => {
 .detail-container {
     background-color: #f5f7fa;
     min-height: 100vh;
-    padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }
 
 .base-box {
@@ -254,60 +277,6 @@ const selectAndBack = () => {
     }
 }
 
-/* 教练风采横向滚动区 */
-.media-scroll {
-    white-space: nowrap;
-
-    .media-item {
-        display: inline-block;
-        width: 240rpx;
-        margin-right: 20rpx;
-
-        .media-content {
-            position: relative;
-            width: 240rpx;
-            height: 320rpx;
-            border-radius: 12rpx;
-            overflow: hidden;
-
-            .media-cover {
-                width: 100%;
-                height: 100%;
-                background-color: #eee;
-            }
-
-            .play-icon-mask {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: rgba(0, 0, 0, 0.3);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                .icon-play {
-                    color: #fff;
-                    font-size: 60rpx;
-                    opacity: 0.8;
-                }
-            }
-        }
-
-        .media-tag {
-            display: block;
-            font-size: 24rpx;
-            color: #666;
-            text-align: center;
-            margin-top: 10rpx;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-    }
-}
-
 /* 动态区横向滚动 */
 .feed-scroll {
     white-space: nowrap;
@@ -332,6 +301,7 @@ const selectAndBack = () => {
             font-size: 24rpx;
             color: #333;
             white-space: normal;
+            /* 恢复内容换行 */
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
@@ -381,11 +351,30 @@ const selectAndBack = () => {
             font-size: 28rpx;
             color: #444;
             line-height: 1.5;
+            margin-bottom: 16rpx;
+        }
+
+        .review-tags {
+            display: flex;
+            gap: 12rpx;
+            flex-wrap: wrap;
+
+            .rtag {
+                font-size: 20rpx;
+                color: #ff9800;
+                border: 2rpx solid #ffcc80;
+                padding: 2rpx 10rpx;
+                border-radius: 6rpx;
+            }
         }
     }
 }
 
 /* 底部操作栏 */
+.bottom-spacer {
+    height: 140rpx;
+}
+
 .fixed-bottom-bar {
     position: fixed;
     bottom: 0;
@@ -396,9 +385,7 @@ const selectAndBack = () => {
     display: flex;
     align-items: center;
     padding: 0 30rpx;
-    padding-bottom: env(safe-area-inset-bottom);
     box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
-    z-index: 100;
 
     .primary-btn {
         width: 100%;

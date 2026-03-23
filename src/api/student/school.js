@@ -8,3 +8,11 @@ export function getSchoolList(query) {
     params: query
   });
 }
+
+// 获取驾校详情
+export function getSchoolDetail(id) {
+  return request({
+    url: '/student/school/' + id,
+    method: 'get'
+  });
+}

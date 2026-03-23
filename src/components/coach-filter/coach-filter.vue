@@ -25,17 +25,19 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted, onUnmounted  } from 'vue';
+import { getCoachList, getCoachTags } from '@/api/student/coach';
 
 const emit = defineEmits(['change']);
 
 // 预设教练标签（后续可从数据字典 sys_dict_data 获取）
 const coachTags = ref([
     { label: '全部', value: '' },
+    { label: '金牌教练', value: '金牌教练' },
     { label: '脾气好', value: '脾气好' },
     { label: '通过率高', value: '通过率高' },
     { label: '严谨认真', value: '严谨认真' },
-    { label: '不抽烟', value: '不抽烟' }
+    { label: '不抽烟', value: '不抽烟' },
 ]);
 
 const query = reactive({
@@ -65,6 +67,24 @@ const changeSort = (type) => {
         triggerChange();
     }
 };
+
+const fetchCoachTags = async () => {
+    const res = getCoachTags("");
+
+    coachTags.value = [
+        { label: '全部', value: '' },
+        ...res.data.map(item => ({
+            label: item,
+            value: item
+        }))
+        ];
+};
+
+onMounted(() => {
+  // 页面加载时自动获取教练tag列表
+  fetchCoachTags();
+
+});
 </script>
 
 <style lang="scss" scoped>

@@ -80,7 +80,8 @@
             </view>
             <view class="card-right">
               <view class="name-row">
-                <text class="name">{{ coach.nickName }} 教练</text>
+                <!-- <text class="name">{{ coach.nickName }} 教练</text> -->
+                <text class="name">{{ coach.name }} 教练</text>
                 <text class="exp">教龄 {{ coach.teachingYears }} 年</text>
               </view>
               <view class="tags-row">

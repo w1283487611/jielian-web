@@ -1,16 +1,8 @@
 <template>
     <view class="detail-container">
-        <swiper class="media-swiper" indicator-dots autoplay circular :interval="4000">
-            <swiper-item v-for="(media, index) in schoolData.mediaList" :key="media.fileId || index">
-                <view class="media-wrapper" v-if="media.category === 2">
-                    <video class="swiper-video" :src="handleVideoUrl(media.previewUrl)"
-                        :poster="handleImageUrl(media.thumbnailUrl)" object-fit="cover" controls></video>
-                    <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
-                </view>
-                <view class="media-wrapper" v-else>
-                    <image class="swiper-image" :src="handleImageUrl(media.accessUrl)" mode="aspectFill"></image>
-                    <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
-                </view>
+        <swiper class="media-swiper" indicator-dots autoplay circular>
+            <swiper-item v-for="(img, index) in schoolData.mediaList" :key="index">
+                <image :src="img" mode="aspectFill" class="swiper-image"></image>
             </swiper-item>
         </swiper>
 
@@ -22,6 +14,7 @@
             <view class="address-row">
                 <text class="iconfont icon-location"></text>
                 <text class="address-text">{{ schoolData.address }}</text>
+                <text class="distance">距您 {{ schoolData.distance }} km</text>
             </view>
             <view class="stat-grid">
                 <view class="stat-item">
@@ -39,7 +32,7 @@
             </view>
         </view>
 
-        <view class="package-section base-box" v-if="packageList.length > 0">
+        <view class="package-section base-box">
             <view class="section-title">招生套餐</view>
             <view class="package-list">
                 <view class="package-card" v-for="pkg in packageList" :key="pkg.id">
@@ -56,7 +49,7 @@
             </view>
         </view>
 
-        <view class="intro-section base-box" v-if="schoolData.introduction">
+        <view class="intro-section base-box">
             <view class="section-title">驾校简介</view>
             <text class="intro-content">{{ schoolData.introduction }}</text>
         </view>
@@ -77,23 +70,24 @@
 import { ref, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getSchoolDetail } from '@/api/student/school';
-import { handleImageUrl, handleVideoUrl } from '@/utils/common'; // 引入全局媒体处理工具
-
 
 const schoolId = ref(null);
 
+// 存放驾校核心数据
 const schoolData = reactive({
     name: '',
     address: '',
+    distance: 0,
     avgRating: 0,
     successRate: 0,
     totalCoaches: 0,
     totalStudents: 0,
     phone: '',
     introduction: '',
-    mediaList: [] // 现在是包含完整属性的对象数组
+    mediaList: []
 });
 
+// 存放套餐列表
 const packageList = ref([]);
 
 onLoad((options) => {
@@ -111,17 +105,20 @@ const fetchSchoolDetail = async (id) => {
 
         if (res.code === 200 && res.data) {
             const data = res.data;
+            // 赋值驾校基本与统计信息
             Object.assign(schoolData, {
-                name: data.name || '',
-                address: data.address || '暂无详细地址',
+                name: data.name,
+                address: data.address,
+                distance: data.distance || 0, // 如果后端没有计算距离则默认为0
                 avgRating: data.avgRating || 0,
                 successRate: data.successRate || 0,
                 totalCoaches: data.totalCoaches || 0,
                 totalStudents: data.totalStudents || 0,
-                phone: data.phone || '',
-                introduction: data.introduction || '',
+                phone: data.phone,
+                introduction: data.introduction,
                 mediaList: data.mediaList || []
             });
+            // 赋值套餐列表
             packageList.value = data.packageList || [];
         } else {
             uni.showToast({ title: res.msg || '获取详情失败', icon: 'none' });
@@ -130,18 +127,50 @@ const fetchSchoolDetail = async (id) => {
         uni.hideLoading();
         console.error('获取驾校详情异常:', error);
     }
+
+
+    // // 模拟请求后端的驾校详情数据
+    // uni.showLoading({ title: '加载中' });
+
+    // // 模拟数据赋值
+    // Object.assign(schoolData, {
+    //     name: '顺达驾校',
+    //     address: '广东省广州市天河区科韵路12号',
+    //     distance: 1.2,
+    //     avgRating: 4.8,
+    //     successRate: 89.5,
+    //     totalCoaches: 45,
+    //     totalStudents: 3200,
+    //     phone: '400-123-4567',
+    //     introduction: '顺达驾校成立于2010年，拥有独立的标准化大型综合训练场地。我们秉承“严谨教学，用心服务”的理念，为广大学员提供优质的驾驶培训服务。驾校配备全新教练车，接送服务覆盖全城。',
+    //     mediaList: [
+    //         '/static/assets/images/login-background.jpg',
+    //         '/static/assets/images/pay.png'
+    //     ]
+    // });
+
+    // packageList.value = [
+    //     { id: 1, name: 'C1 手动挡全包班', currentPrice: 3999, shortDesc: '适合时间充裕学员，不限学时练到考过为止', includeExamFee: true, includeTransportation: true },
+    //     { id: 2, name: 'C2 自动挡VIP班', currentPrice: 4599, shortDesc: '一人一车，专属教练，优先安排考试', includeExamFee: true, includeTransportation: true }
+    // ];
+
+    // uni.hideLoading();
 };
 
 const callSchool = () => {
     if (schoolData.phone) {
-        uni.makePhoneCall({ phoneNumber: schoolData.phone });
+        uni.makePhoneCall({
+            phoneNumber: schoolData.phone
+        });
     } else {
         uni.showToast({ title: '暂无联系电话', icon: 'none' });
     }
 };
 
 const selectAndBack = () => {
+    // 触发全局事件，通知引导页更新选中的驾校ID
     uni.$emit('selectSchoolFromDetail', schoolId.value);
+    // 返回上一页（引导页）
     uni.navigateBack();
 };
 </script>
@@ -150,35 +179,15 @@ const selectAndBack = () => {
 .detail-container {
     background-color: #f5f7fa;
     min-height: 100vh;
-    padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }
 
 .media-swiper {
     width: 100%;
-    height: 450rpx;
-    background-color: #000;
+    height: 400rpx;
 
-    .media-wrapper {
-        position: relative;
+    .swiper-image {
         width: 100%;
         height: 100%;
-
-        .swiper-image,
-        .swiper-video {
-            width: 100%;
-            height: 100%;
-        }
-
-        .media-tag {
-            position: absolute;
-            bottom: 20rpx;
-            right: 20rpx;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            font-size: 22rpx;
-            padding: 6rpx 16rpx;
-            border-radius: 20rpx;
-        }
     }
 }
 
@@ -217,7 +226,7 @@ const selectAndBack = () => {
 
 .address-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     font-size: 26rpx;
     color: #666;
     margin-bottom: 30rpx;
@@ -225,12 +234,15 @@ const selectAndBack = () => {
     .icon-location {
         margin-right: 10rpx;
         color: #007aff;
-        margin-top: 4rpx;
     }
 
     .address-text {
         flex: 1;
-        line-height: 1.4;
+    }
+
+    .distance {
+        color: #999;
+        margin-left: 20rpx;
     }
 }
 
@@ -303,6 +315,7 @@ const selectAndBack = () => {
     }
 }
 
+/* 简介区 */
 .intro-content {
     font-size: 28rpx;
     color: #666;
@@ -310,6 +323,10 @@ const selectAndBack = () => {
 }
 
 /* 底部操作栏 */
+.bottom-spacer {
+    height: 140rpx;
+}
+
 .fixed-bottom-bar {
     position: fixed;
     bottom: 0;
@@ -320,9 +337,7 @@ const selectAndBack = () => {
     display: flex;
     align-items: center;
     padding: 0 30rpx;
-    padding-bottom: env(safe-area-inset-bottom);
     box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
-    z-index: 100;
 
     .icon-btn {
         display: flex;
