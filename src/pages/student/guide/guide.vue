@@ -38,7 +38,8 @@
             <view class="card-left">
               <image class="avatar-img" src="/static/assets/logo/logo.png" mode="aspectFill"></image>
             </view>
-            <view class="card-right">
+
+            <!-- <view class="card-right">
               <view class="name-row">
                 <text class="name">{{ school.name }}</text>
                 <text class="distance">{{ school.distance || '未知' }} km</text>
@@ -50,7 +51,24 @@
               <view class="address-row">
                 <text class="address">{{ school.address }}</text>
               </view>
+            </view> -->
+
+            <view class="card-right">
+              <view class="name-row">
+                <text class="name">{{ school.name || '未知驾校' }}</text>
+                <text class="distance">{{ school.distance != null ? school.distance + ' km' : '距离未知' }}</text>
+              </view>
+              <view class="stat-row">
+                <text class="rating" v-if="school.avgRating > 0">⭐ {{ school.avgRating }}</text>
+                <text class="rating no-data-text" v-else>暂无评分</text>
+                
+                <text class="students">累计学员 {{ school.totalStudents || 0 }} 人</text>
+              </view>
+              <view class="address-row">
+                <text class="address">{{ school.address || '暂无详细地址' }}</text>
+              </view>
             </view>
+
           </view>
           
           <view class="card-footer">
@@ -78,9 +96,10 @@
             <view class="card-left">
               <image class="avatar-img" src="/static/assets/images/profile.jpg" mode="aspectFill"></image>
             </view>
-            <view class="card-right">
+
+            <!-- <view class="card-right">
               <view class="name-row">
-                <!-- <text class="name">{{ coach.nickName }} 教练</text> -->
+
                 <text class="name">{{ coach.name }} 教练</text>
                 <text class="exp">教龄 {{ coach.teachingYears }} 年</text>
               </view>
@@ -91,7 +110,29 @@
                 <text class="rating">⭐ {{ coach.rating }}</text>
                 <text class="students">带教 {{ coach.totalStudents }} 人</text>
               </view>
+            </view> -->
+
+            <view class="card-right">
+              <view class="name-row">
+                <text class="name">{{ coach.name || '未知教练' }}</text>
+                <text class="exp">教龄 {{ coach.teachingYears || 0 }} 年</text>
+              </view>
+              
+              <view class="tags-row" v-if="coach.tags && coach.tags.length > 0">
+                <text class="info-tag" v-for="(t, index) in coach.tags" :key="index">{{ t }}</text>
+              </view>
+              <view class="tags-row" v-else>
+                <text class="info-tag empty-tag">暂无特色标签</text>
+              </view>
+
+              <view class="stat-row">
+                <text class="rating" v-if="coach.rating > 0">⭐ {{ coach.rating }}</text>
+                <text class="rating no-data-text" v-else>暂无评分</text>
+                
+                <text class="students">带教 {{ coach.totalStudents || 0 }} 人</text>
+              </view>
             </view>
+            
           </view>
 
           <view class="card-footer">
@@ -423,5 +464,18 @@ const submitGuide = async (isSkip = false) => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10rpx); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* 在现有的样式中补充这两条 */
+.no-data-text {
+  color: #c0c4cc !important; /* 灰色弱化显示 */
+  font-weight: normal !important;
+  font-size: 22rpx;
+}
+
+.empty-tag {
+  background-color: #f5f7fa !important;
+  color: #909399 !important;
+  border: 1px dashed #dcdfe6;
 }
 </style>

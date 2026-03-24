@@ -2,7 +2,7 @@
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 // #endif
-import { getToken, getUserRole } from "@/utils/auth";
+import { getToken, removeToken, getUserRole } from "@/utils/auth";
 import { isHttp, isPathMatch } from "@/utils/validate";
 import { isRelogin } from "@/utils/request";
 import useUserStore from "@/store/modules/user";
@@ -12,15 +12,17 @@ import useUserStore from "@/store/modules/user";
 // #ifdef H5
 NProgress.configure({ showSpinner: false });
 // #endif
-import { 
-    SYS_ROLES, SYS_ROLE_KEYS, COACH, STUDENT, 
-    getRole, 
-    HOME_PATH as indexPath,
-    LOGIN_PATH as loginPath,
-    REGISTER_PATH as registerPath,
-    PERM_WHITE_LIST as whiteList,
-    SELECT_ROLE_PATH, 
-
+import {
+  SYS_ROLES,
+  SYS_ROLE_KEYS,
+  COACH,
+  STUDENT,
+  getRole,
+  HOME_PATH as indexPath,
+  LOGIN_PATH as loginPath,
+  REGISTER_PATH as registerPath,
+  PERM_WHITE_LIST as whiteList,
+  SELECT_ROLE_PATH,
 } from "@/utils/constants";
 
 // const indexPath = "/pages/index/index";
@@ -32,7 +34,7 @@ const isWhiteList = (path) => {
   return whiteList.some((pattern) => isPathMatch(pattern, path));
 };
 
-// const 
+// const
 
 /**
  * 路由前置操作
@@ -48,16 +50,64 @@ const beforeEach = (args) => {
     //获取到了token
     // 设置目标页面的标题
     // to.meta.title && useSettingsStore().setTitle(to.meta.title)
+
+    // 检查token是否过期
+    if (useUserStore().roles.length === 0) {
+      isRelogin.show = true;
+      // 判断当前用户是否已拉取完user_info信息
+      useUserStore()
+        .getInfo()
+        .then(() => {
+          isRelogin.show = false;
+          // 创建路由
+          // usePermissionStore()
+          //     .generateRoutes()
+          //     .then((accessRoutes) => {
+          //         // 根据roles权限生成可访问的路由表
+          //         accessRoutes.forEach((route) => {
+          //             if (!isHttp(route.path)) {
+          //                 // console.log("6: ",route.path)
+          //                 // route.path = route.path.startsWith('/') ? route.path : '/' + route.path;
+          //                 router.addRoute(route); // 动态添加可访问路由表
+          //             }
+          //         });
+          //         // console.log('确保addRoutes已完成,\n从:', from.path, '到:', to.path)
+          //         next({ ...to, replace: true }); // hack方法 确保addRoutes已完成
+          //     });
+          return args;
+        })
+        .catch((err) => {
+          useUserStore()
+            .logOut()
+            .then(() => {
+              uni.showToast({
+                title: err || "未登录",
+                icon: "none",
+              });
+              removeToken();
+              args.url = indexPath;
+              return args;
+            });
+        });
+    } else {
+      // console.log('end,\n从:', from.path, '到:', to.path)
+
+      // console.log('路由跳转:', `从 ${from.path} 到 ${to.path}`)
+      return args;
+    }
+
+    // 检查用户是否选择角色
     const roleKey = getUserRole();
-    if(!SYS_ROLE_KEYS.includes(roleKey) && args.url != SELECT_ROLE_PATH) { // 未选择角色
-        console.error("未选择角色: ",roleKey);
-        uni.showToast({title:"请选择角色"});
-        args.url = SELECT_ROLE_PATH;
-        return args;
-    } 
+    if (!SYS_ROLE_KEYS.includes(roleKey) && args.url != SELECT_ROLE_PATH) {
+      // 未选择角色
+      console.error("未选择角色: ", roleKey);
+      uni.showToast({ title: "请选择角色" });
+      args.url = SELECT_ROLE_PATH;
+      return args;
+    }
     if (args.url === loginPath) {
       //已经登录，防止二次登录
-      uni.showToast({title:"您已登录，无需再次登录",icon:"none"});
+      uni.showToast({ title: "您已登录，无需再次登录", icon: "none" });
       args.url = indexPath;
       // #ifdef H5
       NProgress.done();
@@ -65,50 +115,6 @@ const beforeEach = (args) => {
     } else if (isWhiteList(args.url)) {
       // 白名单，例如注册
       return args;
-    } else {
-      // 普通路径
-      if (useUserStore().roles.length === 0) {
-        isRelogin.show = true;
-        // 判断当前用户是否已拉取完user_info信息
-        useUserStore()
-          .getInfo()
-          .then(() => {
-            isRelogin.show = false;
-            // 创建路由
-            // usePermissionStore()
-            //     .generateRoutes()
-            //     .then((accessRoutes) => {
-            //         // 根据roles权限生成可访问的路由表
-            //         accessRoutes.forEach((route) => {
-            //             if (!isHttp(route.path)) {
-            //                 // console.log("6: ",route.path)
-            //                 // route.path = route.path.startsWith('/') ? route.path : '/' + route.path;
-            //                 router.addRoute(route); // 动态添加可访问路由表
-            //             }
-            //         });
-            //         // console.log('确保addRoutes已完成,\n从:', from.path, '到:', to.path)
-            //         next({ ...to, replace: true }); // hack方法 确保addRoutes已完成
-            //     });
-            return args;
-          })
-          .catch((err) => {
-            useUserStore()
-              .logOut()
-              .then(() => {
-                uni.showToast({
-                  title: err || "未登录",
-                  icon: "none",
-                });
-                args.url = indexPath;
-                return args;
-              });
-          });
-      } else {
-        // console.log('end,\n从:', from.path, '到:', to.path)
-
-        // console.log('路由跳转:', `从 ${from.path} 到 ${to.path}`)
-        return args;
-      }
     }
   } else {
     // 没有token

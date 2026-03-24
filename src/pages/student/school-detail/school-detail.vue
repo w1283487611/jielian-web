@@ -1,6 +1,6 @@
 <template>
     <view class="detail-container">
-        <swiper class="media-swiper" indicator-dots autoplay circular :interval="4000">
+        <!-- <swiper class="media-swiper" indicator-dots autoplay circular :interval="4000">
             <swiper-item v-for="(media, index) in schoolData.mediaList" :key="media.fileId || index">
                 <view class="media-wrapper" v-if="media.category === 2">
                     <video class="swiper-video" :src="handleVideoUrl(media.previewUrl)"
@@ -12,7 +12,46 @@
                     <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
                 </view>
             </swiper-item>
-        </swiper>
+        </swiper> -->
+        <swiper 
+      class="media-swiper" 
+      indicator-dots 
+      autoplay 
+      circular 
+      :interval="4000"
+      v-if="schoolData.mediaList && schoolData.mediaList.length > 0"
+    >
+      <swiper-item v-for="(media, index) in schoolData.mediaList" :key="media.fileId || index">
+        <view class="media-wrapper" v-if="media.category === 2">
+          <video 
+            class="swiper-video" 
+            :src="handleVideoUrl(media.previewUrl)" 
+            :poster="handleImageUrl(media.thumbnailUrl)"
+            object-fit="cover"
+            controls
+          ></video>
+          <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
+        </view>
+        <view class="media-wrapper" v-else>
+          <image 
+            class="swiper-image" 
+            :src="handleImageUrl(media.accessUrl)" 
+            mode="aspectFill"
+          ></image>
+          <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
+        </view>
+      </swiper-item>
+    </swiper>
+
+    <view class="media-swiper" v-else>
+      <view class="media-wrapper">
+        <image 
+          class="swiper-image" 
+          :src="handleImageUrl('')" 
+          mode="aspectFill"
+        ></image>
+      </view>
+    </view>
 
         <view class="info-section base-box">
             <view class="header-row">
