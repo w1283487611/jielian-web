@@ -4,6 +4,7 @@ import cache from './cache'
 import modal from './modal'
 // import download from './download'
 import url from './url'
+import bus from './bus'
 
 export default function installPlugins(app){
   // 页签操作
@@ -18,4 +19,6 @@ export default function installPlugins(app){
   // app.config.globalProperties.$download = download
   // 路径格式化
   app.config.globalProperties.$url = url
+  // 事件发布订阅
+  app.config.globalProperties.$bus = bus
 }

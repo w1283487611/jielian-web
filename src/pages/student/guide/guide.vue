@@ -36,7 +36,8 @@
         >
           <view class="card-body" @click="goToSchoolDetail(school.id)">
             <view class="card-left">
-              <image class="avatar-img" src="/static/assets/logo/logo.png" mode="aspectFill"></image>
+              <!-- <image class="avatar-img" src="/static/assets/logo/logo.png" mode="aspectFill"></image> -->
+              <image class="avatar-img" :src="$url.formatImg(school.coverUrl)" mode="aspectFill"></image>
             </view>
 
             <!-- <view class="card-right">
@@ -94,7 +95,9 @@
         >
           <view class="card-body" @click="goToCoachDetail(coach.id)">
             <view class="card-left">
-              <image class="avatar-img" src="/static/assets/images/profile.jpg" mode="aspectFill"></image>
+              <!-- {{ coach.avatar }} -->
+              <!-- <image class="avatar-img" src="/static/assets/images/profile.jpg" mode="aspectFill"></image> -->
+              <image class="avatar-img" :src="$url.formatAvatar(coach.avatar)" mode="aspectFill"></image>
             </view>
 
             <!-- <view class="card-right">
@@ -353,6 +356,8 @@ const submitGuide = async (isSkip = false) => {
     // }, 800);
     // 发起真实请求保存学员初始配置
     const res = await submitStudentInit(guideForm);
+    // 存储学员初始配置当前选择到 store 和本地存储
+
     uni.hideLoading();
     
     if (res.code === 200) {

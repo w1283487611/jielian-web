@@ -121,21 +121,28 @@ const useUserStore = defineStore("user", {
           });
       });
     },
-    // 退出系统
+    // 退出登录
     logOut() {
       return new Promise((resolve, reject) => {
         logout(this.token)
-          .then(() => {
-            this.token = "";
-            this.roles = [];
-            this.permissions = [];
-            removeToken();
+          .catch((error) => {}) // 忽略错误
+          .finally(() => {
+            this.resetUser();
             resolve();
-          })
-          .catch((error) => {
-            reject(error);
           });
       });
+    },
+    /**
+     * 重置登录信息
+     */
+    resetUser() {
+      this.token = ""
+      this.roles = []
+      this.permissions = []
+      this.user = undefined
+    
+      removeToken()
+      removeUserRole()
     },
     /**
      * 切换角色: student/coach

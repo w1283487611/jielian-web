@@ -6,6 +6,10 @@ import {
  * STORAGE 用户当前角色存储KEY
  */
 export const ROLE_STORAGE_KEY = "User-Role";
+/**
+ * 用户当前角色是否初始化存储KEY
+ */
+export const ROLE_INIT_STORAGE_KEY = "User-Role-Init";
 
 /**
  * 系统角色 - 教练

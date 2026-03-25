@@ -9,7 +9,7 @@
             <view class="tag-list">
                 <text v-for="tag in coachTags" :key="tag.value"
                     :class="['filter-tag', query.tag === tag.value ? 'active' : '']" @click="changeTag(tag.value)">{{
-                    tag.label }}</text>
+                        tag.label }}</text>
             </view>
         </scroll-view>
 
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted  } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { getCoachList, getCoachTags } from '@/api/student/coach';
 
 const emit = defineEmits(['change']);
@@ -69,7 +69,7 @@ const changeSort = (type) => {
 };
 
 const fetchCoachTags = async () => {
-    const res = getCoachTags("");
+    const res = await getCoachTags("");
 
     coachTags.value = [
         { label: '全部', value: '' },
@@ -77,12 +77,12 @@ const fetchCoachTags = async () => {
             label: item,
             value: item
         }))
-        ];
+    ];
 };
 
 onMounted(() => {
-  // 页面加载时自动获取教练tag列表
-  fetchCoachTags();
+    // 页面加载时自动获取教练tag列表
+    fetchCoachTags();
 
 });
 </script>
@@ -144,10 +144,14 @@ onMounted(() => {
 }
 
 .sort-tabs {
-  display: flex;
-  gap: 30rpx;
-  font-size: 26rpx;
-  color: #666;
-  .active { color: #007aff; font-weight: bold; } 
+    display: flex;
+    gap: 30rpx;
+    font-size: 26rpx;
+    color: #666;
+
+    .active {
+        color: #007aff;
+        font-weight: bold;
+    }
 }
 </style>

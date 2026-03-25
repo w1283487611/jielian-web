@@ -8,6 +8,7 @@ import { saveAs } from "file-saver";
 // #endif
 // import useUserStore from "@/store/modules/user";
 import { uniappAdapter } from '@zebra-ui/axios-adapter'; // uniapp适配器
+import $bus from '@/plugins/bus';
 
 let downloadLoadingInstance;
 // 是否显示重新登录
@@ -129,6 +130,8 @@ service.interceptors.response.use(
           success: (res) => {
             // 无论用户点击哪个按钮，都先隐藏登录过期的提示
             isRelogin.show = false;
+            // 发布token失效通知事件
+            $bus.emit($bus.EVENT_TYPES.TOKEN_EXPIRED);
             if (res.confirm) {
               // 用户点击“重新登录”
               // 假设 useUserStore() 是你的状态管理函数

@@ -1,6 +1,4 @@
-/**
- * 从存储空间读取数据
- */
+import { isTokenExpired, isTokenExpiring } from "@/utils/jwt";
 // import Cookies from 'js-cookie'
 
 // const TokenKey = 'Admin-Token'
@@ -19,9 +17,11 @@
 
 // utils/auth.js - 使用 UniApp 存储 API
 import { 
+  ROLE_INIT_STORAGE_KEY as RoleInitKey,
   ROLE_STORAGE_KEY as RoleKey,
   USER_STORAGE_KEY as UserKey,
-  TOKEN_STORAGE_KEY as TokenKey
+  TOKEN_STORAGE_KEY as TokenKey,
+  TOKEN_EXPIRE_STORAGE_KEY as Expire_Key
 } from "@/utils/constants";
 
 // const TokenKey = 'Login-Token';
@@ -31,13 +31,15 @@ import {
 // Token
 // 获取 Token
 export function getToken() {
-  return uni.getStorageSync(TokenKey)
+  return uni.getStorageSync(TokenKey);
 }
 
 // 设置 Token
-export function setToken(token, expires = 7) {
+export function setToken(token, expires = 7 * 24 * 3600 * 1000) {
   // expires 参数保持兼容，但 UniApp 存储不支持自动过期
-  return uni.setStorageSync(TokenKey, token)
+  return uni.setStorageSync(TokenKey, token);
+  // 设置token过期时间
+  // uni.setStorageSync(Expire_Key, Date.now() + expires);
 }
 
 // 移除 Token
@@ -125,3 +127,119 @@ export async function removeUserRoleAsync() {
     })
   })
 }
+
+
+// UserRoleInit 用户当前使用的角色是否初始化
+// 获取 用户当前使用的角色是否初始化
+export function getUserRoleInit() {
+  return uni.getStorageSync(RoleInitKey)
+}
+
+// 设置 用户当前使用的角色初始化
+export function setUserRoleInit(init = 1) {
+  return uni.setStorageSync(RoleInitKey, init)
+}
+
+// 移除 用户当前使用的角色是否初始化
+export function removeUserRoleInit() {
+  return uni.removeStorageSync(RoleInitKey)
+}
+
+// 异步版本
+export async function getUserRoleInitAsync() {
+  return new Promise((resolve, reject) => {
+    uni.getStorage({
+      key: RoleInitKey,
+      success: (res) => resolve(res.data),
+      fail: reject
+    })
+  })
+}
+
+export async function setUserRoleInitAsync(init=1) {
+  return new Promise((resolve, reject) => {
+    uni.setStorage({
+      key: RoleInitKey,
+      data: init,
+      success: resolve,
+      fail: reject
+    })
+  })
+}
+
+export async function removeUserRoleInitAsync() {
+  return new Promise((resolve, reject) => {
+    uni.removeStorage({
+      key: RoleInitKey,
+      success: resolve,
+      fail: reject
+    })
+  })
+}
+
+// =========================
+// ⭐状态判断（关键）
+// =========================
+// 是否登录
+export function isLogin() {
+  const token = getToken();
+  if (token === null || token === undefined || token === "") return false;
+
+
+  // isTokenExpiring
+  // 检查token是否过期
+  if(isTokenExpired(token)) {
+    // 过期，异步删除token
+    // removeTokenAsync();
+    // 发布token失效通知事件
+    // $bus.emit($bus.EVENT_TYPES.TOKEN_EXPIRED);
+    return false;
+  } 
+  // 获取token过期时间
+  // const expire = Number(uni.getStorageSync(Expire_Key));
+  // return Date.now() < expire;
+  // return !!getToken()
+
+  return true;
+}
+
+
+// 是否选择角色
+export function hasRole() {
+  // const role = getUserRole();
+  // if (role === null || role === undefined) return false;
+
+  // return true;
+  // return !!getUserRole();
+}
+
+// 角色是否初始化
+export function isRoleInit() {
+  // const roleInit = getUserRoleInit();
+  // if (roleInit === null || roleInit === undefined) return false;
+
+  // console.log(!!roleInit)
+  // return true;
+
+  return !!getUserRoleInit();
+}
+
+// // =========================
+// // ⭐统一登录写入（强烈推荐）
+// // =========================
+// export function setAuth(data) {
+//   const { token, role, userInfo } = data
+
+//   if (token) setToken(token)
+//   if (role) setUserRole(role)
+//   if (userInfo) setUserInfo(userInfo)
+// }
+
+// // =========================
+// // ⭐统一清理（退出登录）
+// // =========================
+// export function clearAuth() {
+//   removeToken()
+//   removeUserRole()
+//   removeUserInfo()
+// }

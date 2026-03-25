@@ -3,3 +3,8 @@
  */
 export const STUDENT_STORAGE_KEY = "Student";
 export const STUDENT_SUBJECT_ID_STORAGE_KEY = "Student_Subject_Id";
+export const STUDENT_GUIDE_STORAGE_KEY = "Student_Guide";
+
+/**
+ * 
+ */
