@@ -1,5 +1,6 @@
 import {
-    STUDENT_HOME_PATH, COACH_HOME_PATH
+    STUDENT_HOME_PATH, COACH_HOME_PATH,
+    STUDENT_GUIDE_PATH, COACH_GUIDE_PATH,
 } from "./route";
 // common/constants/role.js
 /**
@@ -18,7 +19,8 @@ export const COACH = {
     id: 3,
     roleName: "教练",
     roleKey: "coach",
-    path: COACH_HOME_PATH
+    path: COACH_HOME_PATH,
+    initPath: COACH_GUIDE_PATH
 }
 /**
  * 系统角色 - 学员
@@ -27,7 +29,8 @@ export const STUDENT = {
     id: 4,
     roleName: "学员",
     roleKey: "student",
-    path: STUDENT_HOME_PATH
+    path: STUDENT_HOME_PATH,
+    initPath: STUDENT_GUIDE_PATH
 }
 
 /**

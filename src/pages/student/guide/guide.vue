@@ -169,6 +169,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
 import SchoolFilter from '@/components/school-filter/school-filter.vue';
 import CoachFilter from '@/components/coach-filter/coach-filter.vue';
 
@@ -201,22 +202,10 @@ const licenseList = ref([]);
 const schoolList = ref([]);
 const coachList = ref([]);
 
-onMounted(() => {
-  // 页面加载时自动获取驾驶证列表
-  fetchLicenseList();
-  
-  // 监听从详情页返回的选中事件
-  uni.$on('selectSchoolFromDetail', (id) => {
-    guideForm.schoolId = id;
-  });
-  uni.$on('selectCoachFromDetail', (id) => {
-    guideForm.coachId = id;
-  });
-});
-
-onUnmounted(() => {
-  uni.$off('selectSchoolFromDetail');
-  uni.$off('selectCoachFromDetail');
+onShow(() => {
+  // #ifdef MP-WEIXIN
+  wx.hideHomeButton()
+  // #endif
 });
 
 // --- 数据请求部分 ---
@@ -381,6 +370,26 @@ const submitGuide = async (isSkip = false) => {
     console.error('提交引导配置异常:', error);
   }
 };
+
+
+onMounted(() => {
+  // 页面加载时自动获取驾驶证列表
+  fetchLicenseList();
+  
+  // 监听从详情页返回的选中事件
+  uni.$on('selectSchoolFromDetail', (id) => {
+    guideForm.schoolId = id;
+  });
+  uni.$on('selectCoachFromDetail', (id) => {
+    guideForm.coachId = id;
+  });
+});
+
+onUnmounted(() => {
+  uni.$off('selectSchoolFromDetail');
+  uni.$off('selectCoachFromDetail');
+});
+
 </script>
 
 <style lang="scss" scoped>

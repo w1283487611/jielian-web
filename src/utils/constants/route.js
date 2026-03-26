@@ -33,6 +33,10 @@ export const STUDENT_APPOINT_DETAIL_PATH = "/pages/student/appoint-detail/appoin
  * 教练主页
  */
 export const COACH_HOME_PATH = "/pages/tabbar/coach/index/index";
+/**
+ * 教练引导页
+ */
+export const COACH_GUIDE_PATH = "/pages/coach/guide/guide";
 
 // 通用路由常量
 /**

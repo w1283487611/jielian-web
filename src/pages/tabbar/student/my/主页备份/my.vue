@@ -39,30 +39,10 @@
             </view>
         </view>
 
-        <view class="quick-book-section" v-if="mainCoach">
-            <view class="section-header">
-                <text class="title">快速预约</text>
-            </view>
-            <view class="quick-book-card">
-                <image class="coach-avatar" :src="mainCoach.avatar || '/static/assets/images/profile.jpg'"
-                    mode="aspectFill"></image>
-                <view class="coach-info">
-                    <view class="name-line">
-                        <text class="coach-name">{{ mainCoach.name }}</text>
-                        <text class="coach-tag">主教练</text>
-                    </view>
-                    <view class="quota-line">
-                        今日剩余名额：<text class="quota-num">{{ mainCoach.todayQuota }}</text>
-                    </view>
-                </view>
-                <button class="book-btn" @click="quickBook">立即预约</button>
-            </view>
-        </view>
-
         <view class="appointment-section">
             <view class="section-header">
                 <text class="title">近期行程</text>
-                <text class="more" v-if="upcomingAppointment" @click="goToRecords">{{"全部记录 >"}}</text>
+                <text class="more" v-if="upcomingAppointment" @click="goToRecords">全部记录 ></text>
             </view>
 
             <view class="appointment-card has-data" v-if="upcomingAppointment">
@@ -90,7 +70,7 @@
             <view class="appointment-card empty-state" v-else>
                 <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image>
                 <text class="empty-tip">近期暂无练车安排</text>
-                <button class="book-btn" @click="goToBook">去看看排班</button>
+                <button class="book-btn" @click="goToBook">立即预约练车</button>
             </view>
         </view>
 
@@ -106,7 +86,7 @@
         <view class="notice-bar" v-if="notices.length > 0">
             <view class="notice-icon">
                 <text class="iconfont icon-notification"></text>
-                <text class="notice-label">捷练头条</text>
+                <text class="notice-label">捷联头条</text>
             </view>
             <swiper class="notice-swiper" vertical autoplay circular :interval="3000">
                 <swiper-item v-for="(notice, index) in notices" :key="index">
@@ -115,16 +95,15 @@
             </swiper>
         </view>
 
-        <view class="tabbar-spacer"></view>
-
-        <Tabbar />
+        <view class="bottom-spacer"></view>
     </view>
+        <!-- 自定义 TabBar -->
+        <tabbar />
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue';
-import Tabbar from "@/components/tabbar/index.vue"; // 引入自定义 Tabbar
-
+import Tabbar from "@/components/tabbar/index.vue";
 // --- 计算问候语 ---
 const greeting = computed(() => {
     const hour = new Date().getHours();
@@ -139,9 +118,9 @@ const greeting = computed(() => {
 
 // 学员基础信息与进度
 const studentInfo = reactive({
-    name: '唐同学',
+    name: '学员',
     avatar: '',
-    schoolName: '捷练示范驾校', // 已修正名称
+    schoolName: '捷联示范驾校',
     licenseCode: 'C1',
     currentSubject: '科目二',
     totalHours: 12,
@@ -149,14 +128,7 @@ const studentInfo = reactive({
     passRate: 60
 });
 
-// 快速预约：主教练数据
-const mainCoach = reactive({
-    name: '张教练',
-    avatar: '',
-    todayQuota: 3
-});
-
-// 近期预约行程
+// 近期预约行程 (如果设为 null 则显示空状态引导)
 const upcomingAppointment = ref({
     date: '明天',
     time: '14:00 - 16:00',
@@ -164,18 +136,20 @@ const upcomingAppointment = ref({
     coachName: '李伟',
     subjectName: '科目二 倒车入库'
 });
+// 试着将上面的 ref 取消注释，并启用下面这行看空状态：
+// const upcomingAppointment = ref(null); 
 
-// 金刚区菜单配置 (已将理论题库替换为我的驾校)
+// 金刚区菜单配置
 const menuList = ref([
-    { name: '常规预约', icon: 'icon-calendar', bgColor: '#e6f2ff', iconColor: '#007aff', path: '/pages/student/book/book' },
+    { name: '预约练车', icon: 'icon-calendar', bgColor: '#e6f2ff', iconColor: '#007aff', path: '/pages/student/book/book' },
     { name: '练车记录', icon: 'icon-time', bgColor: '#fff0e6', iconColor: '#ff7a00', path: '/pages/student/record/record' },
     { name: '我的教练', icon: 'icon-user-tie', bgColor: '#e6ffec', iconColor: '#00b33c', path: '/pages/student/my-coach/my-coach' },
-    { name: '我的驾校', icon: 'icon-building', bgColor: '#f0e6ff', iconColor: '#7a00ff', path: '/pages/student/school-detail/school-detail' }
+    { name: '理论题库', icon: 'icon-book', bgColor: '#f0e6ff', iconColor: '#7a00ff', path: '/pages/student/exam/exam' }
 ]);
 
-// 公告动态 (已修正名称)
+// 公告动态
 const notices = ref([
-    { id: 1, title: '捷练考场最新规定：科目二考试车辆升级通知' },
+    { id: 1, title: '考场最新规定：科目二考试车辆升级通知' },
     { id: 2, title: '五一假期练车时间安排调整公示' }
 ]);
 
@@ -185,12 +159,8 @@ const goToGuide = () => {
 };
 
 const goToBook = () => {
+    // 跳转到预约Tab或页面
     uni.navigateTo({ url: '/pages/student/book/book' });
-};
-
-const quickBook = () => {
-    // 快速预约逻辑：可直接跳转到带有该教练ID的确认预约页面或弹窗
-    uni.showToast({ title: '拉起快速预约...', icon: 'none' });
 };
 
 const goToRecords = () => {
@@ -207,11 +177,14 @@ const handleMenuClick = (path) => {
 </script>
 
 <style lang="scss" scoped>
+/* 引入你在项目根目录统一定义的 iconfont 字体 */
+/* @import url('@/static/iconfont.css'); */
+
 .home-container {
     background-color: #f5f7fa;
     min-height: 100vh;
     padding: 30rpx;
-    /* 移除底部的内联 padding-bottom，统一交给 tabbar-spacer 控制 */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* 1. 顶部区域 */
@@ -220,7 +193,7 @@ const handleMenuClick = (path) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30rpx;
-    padding-top: 20rpx;
+    padding-top: 20rpx; // 适配小程序胶囊下方
 
     .greeting-box {
         display: flex;
@@ -355,89 +328,7 @@ const handleMenuClick = (path) => {
     }
 }
 
-/* 3. 快速预约主教练 (根据UI图还原) */
-.quick-book-section {
-    margin-bottom: 40rpx;
-
-    .quick-book-card {
-        display: flex;
-        align-items: center;
-        background-color: #fff;
-        border-radius: 20rpx;
-        padding: 30rpx;
-        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
-
-        .coach-avatar {
-            width: 100rpx;
-            height: 100rpx;
-            border-radius: 50%;
-            background-color: #eee;
-            margin-right: 24rpx;
-        }
-
-        .coach-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-
-            .name-line {
-                display: flex;
-                align-items: center;
-                margin-bottom: 12rpx;
-
-                .coach-name {
-                    font-size: 32rpx;
-                    font-weight: bold;
-                    color: #333;
-                    margin-right: 12rpx;
-                }
-
-                .coach-tag {
-                    font-size: 20rpx;
-                    color: #3b82f6;
-                    background-color: #eff6ff;
-                    padding: 4rpx 12rpx;
-                    border-radius: 6rpx;
-                }
-            }
-
-            .quota-line {
-                font-size: 26rpx;
-                color: #666;
-
-                .quota-num {
-                    color: #ff3b30;
-                    font-weight: bold;
-                    margin-left: 8rpx;
-                }
-            }
-        }
-
-        .book-btn {
-            margin: 0;
-            width: 180rpx;
-            height: 68rpx;
-            line-height: 68rpx;
-            background-color: #2f73f6;
-            color: #fff;
-            font-size: 28rpx;
-            border-radius: 34rpx;
-            padding: 0;
-            text-align: center;
-
-            &::after {
-                border: none;
-            }
-
-            &:active {
-                opacity: 0.8;
-            }
-        }
-    }
-}
-
-/* 4. 近期行程卡片 */
+/* 3. 近期行程卡片 */
 .appointment-section {
     margin-bottom: 40rpx;
 
@@ -447,6 +338,7 @@ const handleMenuClick = (path) => {
         padding: 30rpx;
         box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
 
+        /* 有数据状态 */
         &.has-data {
             .apt-header {
                 display: flex;
@@ -528,6 +420,7 @@ const handleMenuClick = (path) => {
             }
         }
 
+        /* 空状态引导 */
         &.empty-state {
             display: flex;
             flex-direction: column;
@@ -562,7 +455,7 @@ const handleMenuClick = (path) => {
     }
 }
 
-/* 5. 金刚区导航 */
+/* 4. 金刚区导航 */
 .grid-menu {
     display: flex;
     flex-wrap: wrap;
@@ -600,7 +493,7 @@ const handleMenuClick = (path) => {
     }
 }
 
-/* 6. 底部头条公告 */
+/* 5. 底部头条公告 */
 .notice-bar {
     display: flex;
     align-items: center;
@@ -648,9 +541,7 @@ const handleMenuClick = (path) => {
     text-overflow: ellipsis;
 }
 
-/* 底部安全区垫片：高度 = 你的自定义 Tabbar 高度 + 安全区底部距离 */
-.tabbar-spacer {
-    height: calc(120rpx + env(safe-area-inset-bottom));
-    width: 100%;
+.bottom-spacer {
+    height: 40rpx;
 }
 </style>

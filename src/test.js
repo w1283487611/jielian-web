@@ -93,7 +93,7 @@ const beforeEach = (args) => {
   /** 已经登录，防止二次登录 */
   if (args.url === loginPath) {
     
-    uni.showToast({ title: "您已登录，无需再次登录", icon: "none" });
+    uni.showToast({ title: "您已登录，无需再次登录", type: "none" });
     args.url = indexPath;
     // #ifdef H5
     NProgress.done();
@@ -110,7 +110,7 @@ const beforeEach = (args) => {
     // 未选择角色
 
     console.error("未选择角色: ", roleKey);
-    uni.showToast({ title: "请选择角色" });
+    uni.showToast({ title: "请选择角色" , type: "none" });
     args.url = SELECT_ROLE_PATH;
     // #ifdef H5
     NProgress.done();
@@ -118,6 +118,8 @@ const beforeEach = (args) => {
     return args;
   }
 
+  // 获取角色相关信息
+  const role = getRole(roleKey);
   /** 判断所跳转的页面是否是对应角色可以访问的页面 */
 
 
@@ -125,14 +127,14 @@ const beforeEach = (args) => {
   if (!isRoleInit(roleKey) // 没有完成初始化
     && true// 排除“角色初始化页面”
     ) { 
-      console.error("未完成必须设置，正在跳转设置~")
-    uni.showToast({ title: "未完成必须设置，正在跳转设置~" });
+      // console.error("未完成必须设置，正在跳转设置~")
+    uni.showToast({ title: "未完成必须设置，正在跳转设置~" , type: "none" });
     // 根据 roleKey 跳转对应角色的初始化页面
-    // args.url = SELECT_ROLE_PATH;
+    args.url = role.initPath;
     // #ifdef H5
-    // NProgress.done();
-    // // #endif
-    // return args;
+    NProgress.done();
+    // #endif
+    return args;
   }
 
   /** 放行 */
