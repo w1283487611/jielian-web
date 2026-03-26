@@ -27,6 +27,7 @@ const useUserStore = defineStore("user", {
     roleId: "",
     /** 当前角色：student | coach */
     role: getUserRole(),
+    // 当前角色拥有的角色
     roles: [],
     permissions: [],
     user: undefined,

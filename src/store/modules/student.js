@@ -1,12 +1,30 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { getInfo as getStuInfo } from "@/api/student/student";
+import { isLogin, getToken, removeToken, 
+  hasRole, getUserRole, 
+  isRoleInit, setUserRoleInit
+} from "@/utils/auth";
+import {
+  SYS_ROLES,
+  SYS_ROLE_KEYS,
+  COACH,
+  STUDENT,
+  getRole,
+  HOME_PATH as indexPath,
+  LOGIN_PATH as loginPath,
+  REGISTER_PATH as registerPath,
+  PERM_WHITE_LIST as whiteList,
+  SELECT_ROLE_PATH,
+} from "@/utils/constants";
+const roleKey = STUDENT.roleKey;
 
 const useStudentStore = defineStore(
   "student",
   () => {
     // 学员基本信息
-    const isSetup = ref(false); // 是否已完成首次引导
+    // const isSetup = ref(false); // 是否已完成首次引导
+    const isSetup = ref(isRoleInit()); // 是否已完成首次引导
 
     const id = ref(null); // 学员id
     const licenseId = ref(null); // 当前练习驾驶证id
@@ -26,6 +44,8 @@ const useStudentStore = defineStore(
     const tempCoachName = ref(""); // 临时教练名
 
     const student = ref(null); //
+
+
 
     // 当前状态练车统计数据 (Mock)
     const practiceStats = ref({
@@ -103,10 +123,12 @@ const useStudentStore = defineStore(
     
     // 完成首次设置
     function completeSetup(data) {
-      licenseType.value = data.licenseType;
+      licenseId.value = data.licenseId;
       schoolId.value = data.schoolId;
-      mainInstructorId.value = data.mainInstructorId;
-      isSetup.value = true;
+      coachId.value = data.coachId;
+      // isSetup.value = true;
+
+      setUserRoleInit(roleKey);
     }
 
 

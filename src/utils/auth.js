@@ -131,13 +131,13 @@ export async function removeUserRoleAsync() {
 
 // UserRoleInit 用户当前使用的角色是否初始化
 // 获取 用户当前使用的角色是否初始化
-export function getUserRoleInit() {
-  return uni.getStorageSync(RoleInitKey)
+export function getUserRoleInit(roleKey) {
+  return uni.getStorageSync(RoleInitKey+':'+roleKey);
 }
 
 // 设置 用户当前使用的角色初始化
-export function setUserRoleInit(init = 1) {
-  return uni.setStorageSync(RoleInitKey, init)
+export function setUserRoleInit(roleKey, init = 1) {
+  return uni.setStorageSync(RoleInitKey+':'+roleKey, init);
 }
 
 // 移除 用户当前使用的角色是否初始化
@@ -146,20 +146,20 @@ export function removeUserRoleInit() {
 }
 
 // 异步版本
-export async function getUserRoleInitAsync() {
+export async function getUserRoleInitAsync(roleKey) {
   return new Promise((resolve, reject) => {
     uni.getStorage({
-      key: RoleInitKey,
+      key: RoleInitKey+':'+roleKey,
       success: (res) => resolve(res.data),
       fail: reject
     })
   })
 }
 
-export async function setUserRoleInitAsync(init=1) {
+export async function setUserRoleInitAsync(roleKey,init=1) {
   return new Promise((resolve, reject) => {
     uni.setStorage({
-      key: RoleInitKey,
+      key: RoleInitKey+':'+roleKey,
       data: init,
       success: resolve,
       fail: reject
@@ -213,15 +213,15 @@ export function hasRole() {
   // return !!getUserRole();
 }
 
-// 角色是否初始化
-export function isRoleInit() {
+// 对应角色是否初始化
+export function isRoleInit(roleKey) {
   // const roleInit = getUserRoleInit();
   // if (roleInit === null || roleInit === undefined) return false;
 
   // console.log(!!roleInit)
   // return true;
 
-  return !!getUserRoleInit();
+  return !!getUserRoleInit(roleKey);
 }
 
 // // =========================

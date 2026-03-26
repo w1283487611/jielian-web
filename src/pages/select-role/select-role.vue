@@ -14,7 +14,8 @@
 
 <script setup lang="js">
 import Tabbar from "@/components/tabbar/index.vue";
-import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
+import { ref, reactive, computed } from 'vue';
+import { onLoad, onShow, onReady, onLaunch } from '@dcloudio/uni-app';
 import { changeUserRole, } from "@/api/system/user";
 
 import useUserStore from "@/store/modules/user";
@@ -37,17 +38,22 @@ const setRole = (role) => {
     const roleInfo = getRole(role);
     changeUserRole(userStore.id, roleInfo.id);
     // const roleName = getRoleName(role);
-    uni.showToast({title:`切换${roleInfo.roleName}成功`});
+    uni.showToast({title:`切换${roleInfo.roleName}成功，正在为您跳转~`});
 
     uni.reLaunch({
         url: roleInfo.path
     });
 }
+
+onLaunch(() => {
+
+});
+
 onShow(() => {
     // #ifdef MP-WEIXIN
     wx.hideHomeButton()
     // #endif
-})
+});
 </script>
 
 <style scoped>

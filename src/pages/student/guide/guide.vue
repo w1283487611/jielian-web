@@ -178,6 +178,10 @@ import { getSchoolList } from '@/api/student/school';
 import { getCoachList } from '@/api/student/coach';
 import { submitStudentInit } from '@/api/student/student';
 
+import useStudentStore from "@/store/modules/student";
+
+const studentStore = useStudentStore();
+
 
 const currentStep = ref(1);
 
@@ -357,7 +361,7 @@ const submitGuide = async (isSkip = false) => {
     // 发起真实请求保存学员初始配置
     const res = await submitStudentInit(guideForm);
     // 存储学员初始配置当前选择到 store 和本地存储
-
+    studentStore.completeSetup(guideForm);
     uni.hideLoading();
     
     if (res.code === 200) {

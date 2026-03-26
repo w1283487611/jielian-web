@@ -122,7 +122,7 @@ const beforeEach = (args) => {
 
 
   /** 判断角色信息是否完成初始化 */
-  if (!isRoleInit() // 没有完成初始化
+  if (!isRoleInit(roleKey) // 没有完成初始化
     && true// 排除“角色初始化页面”
     ) { 
       console.error("未完成必须设置，正在跳转设置~")
@@ -135,8 +135,6 @@ const beforeEach = (args) => {
     // return args;
   }
 
-  console.log("路由放行")
-  console.log(isRoleInit())
   /** 放行 */
   // #ifdef H5
   NProgress.done();
