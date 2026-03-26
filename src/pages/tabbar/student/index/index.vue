@@ -1,587 +1,658 @@
 <template>
-    <view class="home-container">
-        <view class="upload-container">
-            <button type="primary" @click="chooseAndUploadImage">上传图片</button>
-            <button type="default" @click="chooseAndUploadWeChatFile">上传微信聊天文件</button>
-            
-            <view v-if="isUploading">上传中... {{ uploadProgress }}%</view>
-        </view>
-        ====
-        <view>
-            <uni-file-picker
-            ref="uploadfile"
-            v-model="fileList"
-            file-mediatype="all"
-            mode="list"
-            :limit="3"
-            file-extname="pdf,doc,docx,xls,xlsx,mp4,png,ico,jpg,jpeg"  
-            title="上传附件(最多3个)"
-            @select="handleSelect"
-            />
-        </view>
-        ====
-        <view class="upload-container">
-            <button @click="chooseAndUploadVideo">选择视频并上传</button>
-            <view v-if="uploadStatus !== 'idle'">
-            <text>状态: {{ uploadStatus }}</text>
-            <progress :percent="progress" show-info stroke-width="3" />
-            </view>
-            <view class="actions" v-if="uploaderInstance">
-            <button size="mini" @click="pauseUpload">暂停</button>
-            <button size="mini" @click="resumeUpload">继续</button>
-            </view>
-        </view>
-
-        <navigator url="/pages/student/guide/guide" open-type="navigate" class="link-type">
-            引导页
-        </navigator>
-        <navigator url="/pages/student/my-coach/my-coach" open-type="navigate" class="link-type">
-            我的教练页
-        </navigator>
-        <navigator url="/pages/student/appoint-detail/appoint-detail" open-type="navigate" class="link-type">
-            预约详情页
-        </navigator>
-        <!-- 头部统计卡片 -->
-        <view class="header-card">
-            <view class="user-welcome">
-                <text class="hello">Hi, 同学</text>
-                <view class="license-tag">C1 | 科目二练习中</view>
-            </view>
-            <view class="stats-row">
-                <view class="stat-item">
-                    <text class="num">12.5</text>
-                    <text class="label">累计学时(h)</text>
-                </view>
-                <view class="stat-item">
-                    <text class="num">85</text>
-                    <text class="label">综合评分</text>
-                </view>
-                <view class="stat-item">
-                    <text class="num">6</text>
-                    <text class="label">预约次数</text>
-                </view>
-            </view>
-        </view>
-
-        <!-- 快速预约区 -->
-        <view class="section">
-            <view class="section-title">快速预约</view>
-            <view class="quick-book-card">
-                <view class="coach-preview">
-                    <image src="https://placehold.co/100" class="avatar"></image>
-                    <view class="info">
-                        <view class="name">张教练 <text class="badge">主教练</text></view>
-                        <view class="status">今日剩余名额: <text class="highlight">3</text></view>
-                    </view>
-                </view>
-                <button class="book-btn" @click="goToBooking(101)">立即预约</button>
-            </view>
-        </view>
-
-        <!-- 待办/状态提醒 -->
-        <view class="section">
-            <view class="section-title">当前任务</view>
-            <view class="task-card" @click="goToDetail(123)">
-                <view class="task-header">
-                    <text class="time">今天 14:00 - 16:00</text>
-                    <text class="status-text pending">待确认</text>
-                </view>
-                <view class="task-body">
-                    <text class="content">倒车入库专项练习</text>
-                    <view class="tips">请在开始后30分钟内确认上车</view>
-                </view>
-            </view>
-        </view>
+  <view class="home-container">
+    <view class="header-section">
+      <view class="greeting-box">
+        <text class="greeting-text">{{ greeting }}，{{ studentInfo.name || '学员' }}</text>
+        <text class="sub-text" v-if="studentInfo.schoolName">当前绑定：{{ studentInfo.schoolName }}</text>
+        <text class="sub-text warn-text" v-else @click="goToGuide">您还未绑定驾校，去绑定 ></text>
+      </view>
+      <view class="avatar-box">
+        <image class="avatar" :src="handleAvatar(studentInfo.avatar)" mode="aspectFill"></image>
+      </view>
     </view>
-    <!-- 自定义 TabBar -->
-    <tabbar />
+
+    <view class="progress-card">
+      <view class="card-top">
+        <view class="license-tag">{{ studentInfo.licenseCode || '暂无' }}</view>
+        <view class="subject-text">{{ studentInfo.currentSubject || '尚未开始科目学习' }}</view>
+      </view>
+      <view class="card-middle">
+        <view class="stat-item">
+          <text class="num">{{ studentInfo.totalHours || 0 }}<text class="unit">h</text></text>
+          <text class="label">累计练车</text>
+        </view>
+        <view class="stat-item">
+          <text class="num">{{ studentInfo.totalAppoints || 0 }}<text class="unit">次</text></text>
+          <text class="label">累计预约</text>
+        </view>
+        <view class="stat-item">
+          <text class="num">{{ studentInfo.passRate || 0 }}<text class="unit">%</text></text>
+          <text class="label">项目掌握度</text>
+        </view>
+      </view>
+      <view class="card-bottom">
+        <view class="progress-bar">
+          <view class="progress-inner" :style="{ width: (studentInfo.passRate || 0) + '%' }"></view>
+        </view>
+        <text class="progress-tip">继续保持，距离拿证更近一步！</text>
+      </view>
+    </view>
+
+    <view class="quick-book-section" v-if="mainCoach">
+      <view class="section-header">
+        <text class="title">快速预约</text>
+      </view>
+      <view class="quick-book-card">
+        <image class="coach-avatar" :src="handleAvatar(mainCoach.avatar)" mode="aspectFill"></image>
+        <view class="coach-info">
+          <view class="name-line">
+            <text class="coach-name">{{ mainCoach.name }}</text>
+            <text class="coach-tag">主教练</text>
+          </view>
+          <view class="quota-line">
+            今日剩余名额：<text class="quota-num">{{ mainCoach.todayQuota }}</text>
+          </view>
+        </view>
+        <button class="book-btn" @click="quickBook">立即预约</button>
+      </view>
+    </view>
+
+    <view class="appointment-section">
+      <view class="section-header">
+        <text class="title">近期行程</text>
+        <text class="more" v-if="upcomingAppointment" @click="goToRecords">全部记录 ></text>
+      </view>
+      
+      <view class="appointment-card has-data" v-if="upcomingAppointment">
+        <view class="apt-header">
+          <text class="apt-status pending">待签到</text>
+          <text class="apt-date">{{ upcomingAppointment.date }} {{ upcomingAppointment.time }}</text>
+        </view>
+        <view class="apt-body">
+          <view class="info-row">
+            <text class="iconfont icon-location"></text>
+            <text class="text">{{ upcomingAppointment.locationName }}</text>
+          </view>
+          <view class="info-row">
+            <text class="iconfont icon-user"></text>
+            <text class="text">{{ upcomingAppointment.coachName }} 教练 · {{ upcomingAppointment.subjectName }}</text>
+          </view>
+        </view>
+        <view class="apt-footer">
+          <button class="btn plain-btn">取消预约</button>
+          <button class="btn primary-btn">出示签到码</button>
+        </view>
+      </view>
+
+      <view class="appointment-card empty-state" v-else>
+        <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image>
+        <text class="empty-tip">近期暂无练车安排</text>
+        <button class="book-btn" @click="goToBook">去看看排班</button>
+      </view>
+    </view>
+
+    <view class="grid-menu">
+      <view class="grid-item" v-for="(menu, index) in menuList" :key="index" @click="handleMenuClick(menu.path)">
+        <view class="icon-wrapper" :style="{ backgroundColor: menu.bgColor }">
+          <text class="iconfont" :class="menu.icon" :style="{ color: menu.iconColor }"></text>
+        </view>
+        <text class="menu-name">{{ menu.name }}</text>
+      </view>
+    </view>
+
+    <view class="notice-bar" v-if="notices && notices.length > 0">
+      <view class="notice-icon">
+        <text class="iconfont icon-notification"></text>
+        <text class="notice-label">捷练头条</text>
+      </view>
+      <swiper class="notice-swiper" vertical autoplay circular :interval="3000">
+        <swiper-item v-for="notice in notices" :key="notice.id">
+          <view class="notice-content text-ellipsis">{{ notice.title }}</view>
+        </swiper-item>
+      </swiper>
+    </view>
+    
+    <view class="tabbar-spacer"></view>
+    
+    <Tabbar />
+  </view>
 </template>
 
 <script setup>
-import Tabbar from "@/components/tabbar/index.vue";
 import { ref, reactive, computed } from 'vue';
-import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'; // 引入小程序生命周期
+import Tabbar from "@/components/tabbar/index.vue";
+import { getStudentHomeData } from '@/api/student/home'; // 引入我们刚才写的 API
+import { handleAvatar } from '@/utils/common'; // 引入头像处理工具
 
-import useUserStore from '@/store/modules/user';
-import useStudentStore from '@/store/modules/student';
-import { listLicense } from "@/api/client/license";
-import { listSubjectByLicenseId, tagListSubjectByLicenseId } from "@/api/client/subject";
-import {
-    STUDENT_HOME_PATH,
-} from "@/utils/constants";
-import { getStudent, setStudent, getStudy, setStudy } from "@/utils/student";
-import {
-    STUDENT_STORAGE_KEY,
-
-    STUDENT_GUIDE_PATH, STUDENT_DO_APPOINT_PATH, STUDENT_APPOINT_DETAIL_PATH,
-} from "@/utils/constants";
-
-// 文件上传
-import { getToken } from '@/utils/auth'
-// header: { 'Authorization': 'Bearer ' + getToken() },
-// target: 'http://localhost:8081/upload', // 后端上传接口地址
-
-
-//miniprogram-file-uploader
-import Uploader from 'miniprogram-file-uploader';
-
-// 状态管理
-const progress = ref(0);
-const uploadStatus = ref('idle'); // idle, uploading, paused, success, fail
-const uploaderInstance = ref(null);
-
-// 1. 选择文件 (以视频为例)
-const chooseAndUploadVideo = () => {
-  uni.chooseVideo({
-    sourceType: ['album', 'camera'],
-    compressed: false, // 建议大文件不压缩，保持原画质
-    success: (res) => {
-      console.log(res)
-      startUpload(res.tempFilePath, res.size);
-    },
-    fail: (err) => {
-      console.error('选择文件失败', err);
-    }
-  });
-};
-
-// 2. 初始化并开始上传
-const startUpload = (tempFilePath, size) => {
-  uploadStatus.value = 'uploading';
-  
-  // 实例化 Uploader
-  const uploader = new Uploader({
-    tempFilePath: tempFilePath,
-    totalSize: size,
-    // 从 tempFilePath 提取一个临时文件名
-    fileName: tempFilePath.substring(tempFilePath.lastIndexOf('/') + 1), 
-    
-    // 【重要】你的 Spring Boot 2 后端接口
-    verifyUrl: 'http://localhost:8081/upload/wx', // 校验接口（秒传/断点续传）
-    uploadUrl: 'http://localhost:8081/upload/wx',   // 分片上传接口
-    mergeUrl: 'http://localhost:8081/upload/merge/wx',   // 分片上传接口
-    // verifyUrl: 'https://你的域名/api/upload/verify', // 校验接口（秒传/断点续传）
-    // uploadUrl: 'https://你的域名/api/upload/chunk',   // 分片上传接口
-
-    header: {
-      'Authorization': 'Bearer ' + getToken(),
-      // 'X-Business-Type': 'video' 
-    },
-
-
-    
-    chunkSize: 5 * 1024 * 1024, // 默认 5MB 一片
-    testChunks: true,           // 开启分片校验（实现断点续传的关键）
-    // maxConcurrency: 1,          // 并发上传的分片数量
-  });
-
-  // 监听进度
-  uploader.on('progress', (res) => {
-    progress.value = res.progress;
-  });
-
-  // 监听成功
-  uploader.on('success', (res) => {
-    if(!res?.data?.needUpload){
-        uploadStatus.value = 'success';
-        uploaderInstance.value = null;
-        uni.showToast({ title: '上传完成', icon: 'success' });
-        // res 中会包含后端合并后返回的数据
-        console.log('上传成功，后端返回：', res);
-    }
-
-  });
-
-  // 监听失败
-  uploader.on('fail', (res) => {
-    uploadStatus.value = 'fail';
-    uni.showToast({ title: '上传失败', icon: 'error' });
-    console.error('上传出错：', res);
-  });
-
-  // 保存实例并触发上传
-  uploaderInstance.value = uploader;
-  uploader.upload();
-};
-
-// 3. 控制方法
-const pauseUpload = () => {
-  if (uploaderInstance.value) {
-    uploaderInstance.value.pause();
-    uploadStatus.value = 'paused';
-  }
-};
-
-const resumeUpload = () => {
-  if (uploaderInstance.value) {
-    uploaderInstance.value.resume();
-    uploadStatus.value = 'uploading';
-  }
-};
-//---
-
-// uni-file-picker
-const uploadfile = ref(null);
-// 绑定的文件列表
-// 数据结构大致为: [{ uuid, name, extname, path, url, status, progress }]
-const fileList = ref([])
-
-/**
- * 文件选择后的回调（接管手动上传逻辑）
- */
-const handleSelect = async (e) => {
-  // e.tempFiles 是本次新增选择的文件数组
-  const tempFiles = e.tempFiles
-  // 遍历刚刚选择的文件，逐个发起上传
-  tempFiles.forEach((file) => {
-    //将选择的文件添加到上传文件列表
-    fileList.value.push(file)
-    uploadSingleFile(file)
-  })
-}
-
-/**
- * 单个文件的上传逻辑
- */
-const uploadSingleFile = (file) => {
-  // 1. 在 fileList 中找到对应的文件对象（通过自带的 uuid）
-  const fileItem = fileList.value.find(v => v.uuid === file.uuid)
-  
-  if (!fileItem){
-    return
-  } 
-
-  // 初始化 UI 状态为上传中
-  fileItem.status = 'uploading';
-  fileItem.progress = 0;
-  console.log("开始上传文件")
-  // 2. 发起原生上传请求
-  const uploadTask = uni.uploadFile({
-    url: `http://localhost:8081/upload`, // Vite 环境变量
-    filePath: file.path,
-    name: 'file', // 后端接收文件的字段名
-    header: {
-      'Authorization': 'Bearer ' + getToken() 
-    },
-    success: (res) => {
-      try {
-        const responseData = JSON.parse(res.data)
-        if (responseData.code === 200) {
-          // 🚀 上传成功：更新状态并赋值服务器返回的真实 URL
-          fileItem.status = 'success'
-          fileItem.url = responseData.data.url 
-        } else {
-          // 接口返回业务错误
-          fileItem.status = 'error'
-          uni.showToast({ title: responseData.message || '上传失败', icon: 'none' })
-        }
-      } catch (error) {
-        fileItem.status = 'error'
-      }
-    },
-    fail: () => {
-      // 网络等底层错误
-      fileItem.status = 'error'
-      uni.showToast({ title: '网络请求失败', icon: 'none' })
-    }
-  })
-
-  // 3. 实时更新进度条
-  uploadTask.onProgressUpdate((res) => {
-    fileItem.progress = res.progress
-  })
-}
-
-/**
- * 文件删除回调
- */
-const handleDelete = (e) => {
-  // e.tempFile 是被删除的文件对象
-  console.log('用户删除了文件:', e.tempFile)
-}
-
-// yu
-const isUploading = ref(false)
-const uploadProgress = ref(0)
-
-// 场景 A：选择相册图片上传
-const chooseAndUploadImage = () => {
-  uni.chooseImage({
-    count: 1, // 限制每次只能选择一张
-    sizeType: ['compressed'], // 可以指定是原图还是压缩图
-    sourceType: ['album', 'camera'], 
-    success: (res) => {
-      const tempFilePath = res.tempFilePaths[0]
-      uploadToServer(tempFilePath)
-    }
-  })
-}
-
-// 场景 B：选择微信聊天记录中的文件 (微信小程序专属)
-const chooseAndUploadWeChatFile = () => {
-  uni.chooseMessageFile({
-    count: 1,
-    type: 'file', // 'all' | 'video' | 'image' | 'file'
-    success: (res) => {
-      const tempFilePath = res.tempFiles[0].path
-      uploadToServer(tempFilePath)
-    }
-  })
-}
-
-// 核心上传逻辑
-const uploadToServer = (filePath) => {
-  isUploading.value = true
-  uploadProgress.value = 0
-
-  const uploadTask = uni.uploadFile({
-
-    url: 'http://localhost:8081/upload', // 使用 Vite 环境变量
-    filePath: filePath,
-    name: 'file', // 后端接收文件的字段名，如 formData 中的 'file'
-    header: {
-      // 从 Pinia 获取 Token，注意加上前缀（根据你们后端的规范）
-      'Authorization': `Bearer ${getToken()}` 
-    },
-    formData: {
-      'extraData': '如果后端需要额外的参数，写在这里'
-    },
-    success: (uploadFileRes) => {
-      // ⚠️ 避坑指南：uni.uploadFile 返回的 data 是 String 类型，必须手动 parse！
-      try {
-        const responseData = JSON.parse(uploadFileRes.data)
-        if (responseData.code === 200) {
-          uni.showToast({ title: '上传成功', icon: 'success' })
-          console.log('服务器文件URL:', responseData.data.url)
-        } else {
-          uni.showToast({ title: responseData.message || '上传失败', icon: 'none' })
-        }
-      } catch (e) {
-        uni.showToast({ title: '服务器响应异常', icon: 'none' })
-      }
-    },
-    fail: (err) => {
-      console.error('上传失败:', err)
-      uni.showToast({ title: '网络请求失败', icon: 'none' })
-    },
-    complete: () => {
-      isUploading.value = false
-    }
-  })
-
-  // 监听上传进度
-  uploadTask.onProgressUpdate((res) => {
-    uploadProgress.value = res.progress
-    // res.totalBytesSent 已经上传的数据长度
-    // res.totalBytesExpectedToSend 预期需要上传的数据总长度
-  })
-}
-// end
-
-const userStore = useUserStore();
-const studentStore = useStudentStore();
-
-/**
- * 去和教练进行预约页
- * @param bookingId 
- */
-const goToBooking = (coachId) => {
-    uni.navigateTo({ url: `${STUDENT_DO_APPOINT_PATH}?coachId=${coachId}` });
-};
-
-/**
- * 去预约详情页
- * @param appointId 
- */
-const goToDetail = (appointId) => {
-    uni.navigateTo({ url: `${STUDENT_APPOINT_DETAIL_PATH}?id=${appointId}` });
-};
-
-/**
- * 获取用户信息
- */
-const getStuInfo = async () => {
-    studentStore.getInfo().then((res) => {
-        // console.log(res);
-        if (res.student.subjectId === undefined) {
-            // uni.navigateTo({url: STUDENT_GUIDE_PATH});
-            uni.reLaunch({ url: STUDENT_GUIDE_PATH })
-            // uni.redirectTo({
-            //     url: STUDENT_GUIDE_PATH
-            // })
-        }
-    }).catch((error) => {
-        uni.showToast({ title: `学员信息获取失败:${error}`, icon: 'none' });
-        console.error(error);
-    });
-}
-
-onLoad(() => {
-    getStuInfo();
-
+// --- 计算问候语 ---
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) return '凌晨好';
+  if (hour < 12) return '上午好';
+  if (hour < 14) return '中午好';
+  if (hour < 18) return '下午好';
+  return '晚上好';
 });
+
+// --- 响应式数据源 ---
+
+// 学员基础信息 (赋空初值)
+const studentInfo = reactive({
+  name: '', avatar: '', schoolName: '', licenseCode: '', 
+  currentSubject: '', totalHours: 0, totalAppoints: 0, passRate: 0
+});
+
+// 使用 ref 处理可能为 null 的模块
+const mainCoach = ref(null);
+const upcomingAppointment = ref(null);
+const notices = ref([]);
+
+// 金刚区固定配置
+const menuList = ref([
+  { name: '常规预约', icon: 'icon-calendar', bgColor: '#e6f2ff', iconColor: '#007aff', path: '/pages/student/book/book' },
+  { name: '练车记录', icon: 'icon-time', bgColor: '#fff0e6', iconColor: '#ff7a00', path: '/pages/student/record/record' },
+  { name: '我的教练', icon: 'icon-user-tie', bgColor: '#e6ffec', iconColor: '#00b33c', path: '/pages/student/my-coach/my-coach' },
+  { name: '我的驾校', icon: 'icon-building', bgColor: '#f0e6ff', iconColor: '#7a00ff', path: '/pages/student/school-detail/school-detail' } 
+]);
+
+// --- 核心拉取逻辑 ---
+const fetchHomeData = async () => {
+  try {
+    const res = await getStudentHomeData();
+    if (res.code === 200 && res.data) {
+      // 1. 映射学员信息
+      if (res.data.studentInfo) {
+        Object.assign(studentInfo, res.data.studentInfo);
+      }
+      // 2. 映射快速预约主教练 (如果没有绑定主教练，后端会返回 null)
+      mainCoach.value = res.data.mainCoach || null;
+      // 3. 映射近期行程 (如果没有行程，后端返回 null)
+      upcomingAppointment.value = res.data.upcomingAppointment || null;
+      // 4. 映射公告头条
+      notices.value = res.data.notices || [];
+    }
+  } catch (error) {
+    console.error('获取主页聚合数据异常:', error);
+  } finally {
+    uni.stopPullDownRefresh(); // 如果是下拉刷新进来的，请求完毕后停止动画
+  }
+};
+
+// 每次进入页面/Tab激活时触发，保证数据最新
+onShow(() => {
+  fetchHomeData();
+});
+
+// 支持用户主动下拉刷新
+onPullDownRefresh(() => {
+  fetchHomeData();
+});
+
+// --- 交互事件 ---
+const goToGuide = () => { uni.navigateTo({ url: '/pages/student/guide/guide' }); };
+const goToBook = () => { uni.navigateTo({ url: '/pages/student/book/book' }); };
+const quickBook = () => { uni.showToast({ title: '拉起快速预约...', icon: 'none' }); };
+const goToRecords = () => { uni.navigateTo({ url: '/pages/student/record/record' }); };
+const handleMenuClick = (path) => {
+  if (path) {
+    uni.navigateTo({ url: path });
+  } else {
+    uni.showToast({ title: '功能开发中', icon: 'none' });
+  }
+};
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
+/* 此处保留与上一步完全相同的 CSS 样式，不需要修改 */
+/* ... (请直接复用上一版提供的完整 CSS) ... */
+</style>
+
+<style lang="scss" scoped>
 .home-container {
-    min-height: 100vh;
-    background-color: #f5f7fa;
-    padding: 30rpx;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  padding: 30rpx;
+  /* 移除底部的内联 padding-bottom，统一交给 tabbar-spacer 控制 */
 }
 
-.header-card {
-    background: linear-gradient(135deg, #2979ff, #5393ff);
-    border-radius: 24rpx;
-    padding: 40rpx;
-    color: #fff;
-    margin-bottom: 40rpx;
-    box-shadow: 0 10rpx 20rpx rgba(41, 121, 255, 0.2);
+/* 1. 顶部区域 */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding-top: 20rpx;
 
-    .user-welcome {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 40rpx;
+  .greeting-box {
+      display: flex;
+      flex-direction: column;
 
-        .hello {
-            font-size: 36rpx;
-            font-weight: bold;
-        }
+      .greeting-text {
+          font-size: 44rpx;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 10rpx;
+      }
 
-        .license-tag {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 6rpx 20rpx;
-            border-radius: 30rpx;
-            font-size: 24rpx;
-        }
-    }
+      .sub-text {
+          font-size: 26rpx;
+          color: #666;
+      }
 
-    .stats-row {
-        display: flex;
-        justify-content: space-between;
+      .warn-text {
+          color: #ff9800;
+          font-weight: bold;
+      }
+  }
 
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-
-            .num {
-                font-size: 44rpx;
-                font-weight: bold;
-                margin-bottom: 8rpx;
-            }
-
-            .label {
-                font-size: 24rpx;
-                opacity: 0.8;
-            }
-        }
-    }
+  .avatar-box {
+      .avatar {
+          width: 100rpx;
+          height: 100rpx;
+          border-radius: 50%;
+          border: 4rpx solid #fff;
+          box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+      }
+  }
 }
 
-.section {
-    margin-bottom: 40rpx;
+/* 2. 进度罗盘卡片 */
+.progress-card {
+  background: linear-gradient(135deg, #005bea 0%, #00c6fb 100%);
+  border-radius: 24rpx;
+  padding: 30rpx;
+  color: #fff;
+  margin-bottom: 40rpx;
+  box-shadow: 0 12rpx 24rpx rgba(0, 122, 255, 0.2);
+
+  .card-top {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30rpx;
+
+      .license-tag {
+          background-color: rgba(255, 255, 255, 0.2);
+          padding: 4rpx 16rpx;
+          border-radius: 8rpx;
+          font-size: 24rpx;
+          font-weight: bold;
+          margin-right: 16rpx;
+      }
+
+      .subject-text {
+          font-size: 32rpx;
+          font-weight: bold;
+      }
+  }
+
+  .card-middle {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30rpx;
+
+      .stat-item {
+          display: flex;
+          flex-direction: column;
+
+          .num {
+              font-size: 40rpx;
+              font-weight: bold;
+              margin-bottom: 4rpx;
+
+              .unit {
+                  font-size: 24rpx;
+                  font-weight: normal;
+                  margin-left: 4rpx;
+              }
+          }
+
+          .label {
+              font-size: 24rpx;
+              opacity: 0.8;
+          }
+      }
+  }
+
+  .card-bottom {
+      .progress-bar {
+          width: 100%;
+          height: 12rpx;
+          background-color: rgba(255, 255, 255, 0.3);
+          border-radius: 6rpx;
+          overflow: hidden;
+          margin-bottom: 12rpx;
+      }
+
+      .progress-inner {
+          height: 100%;
+          background-color: #fff;
+          border-radius: 6rpx;
+          transition: width 0.5s ease;
+      }
+
+      .progress-tip {
+          font-size: 22rpx;
+          opacity: 0.9;
+      }
+  }
 }
 
-.section-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    margin-bottom: 20rpx;
-    color: #333;
+/* 通用区块标题 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+
+  .title {
+      font-size: 34rpx;
+      font-weight: bold;
+      color: #333;
+  }
+
+  .more {
+      font-size: 26rpx;
+      color: #999;
+  }
 }
 
-.quick-book-card {
-    background: #fff;
-    padding: 30rpx;
-    border-radius: 20rpx;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* 3. 快速预约主教练 (根据UI图还原) */
+.quick-book-section {
+  margin-bottom: 40rpx;
 
-    .coach-preview {
-        display: flex;
-        align-items: center;
+  .quick-book-card {
+      display: flex;
+      align-items: center;
+      background-color: #fff;
+      border-radius: 20rpx;
+      padding: 30rpx;
+      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
 
-        .avatar {
-            width: 80rpx;
-            height: 80rpx;
-            border-radius: 50%;
-            margin-right: 20rpx;
-        }
+      .coach-avatar {
+          width: 100rpx;
+          height: 100rpx;
+          border-radius: 50%;
+          background-color: #eee;
+          margin-right: 24rpx;
+      }
 
-        .name {
-            font-weight: bold;
-            font-size: 30rpx;
-            margin-bottom: 8rpx;
-        }
+      .coach-info {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
 
-        .badge {
-            font-size: 20rpx;
-            background: #e3f2fd;
-            color: #2979ff;
-            padding: 2rpx 8rpx;
-            border-radius: 4rpx;
-            margin-left: 10rpx;
-        }
+          .name-line {
+              display: flex;
+              align-items: center;
+              margin-bottom: 12rpx;
 
-        .status {
-            font-size: 24rpx;
-            color: #666;
-        }
+              .coach-name {
+                  font-size: 32rpx;
+                  font-weight: bold;
+                  color: #333;
+                  margin-right: 12rpx;
+              }
 
-        .highlight {
-            color: #ff5252;
-            font-weight: bold;
-            margin-left: 6rpx;
-        }
-    }
+              .coach-tag {
+                  font-size: 20rpx;
+                  color: #3b82f6;
+                  background-color: #eff6ff;
+                  padding: 4rpx 12rpx;
+                  border-radius: 6rpx;
+              }
+          }
 
-    .book-btn {
-        margin: 0;
-        background: #2979ff;
-        color: #fff;
-        font-size: 26rpx;
-        border-radius: 30rpx;
-        padding: 0 30rpx;
-        height: 60rpx;
-        line-height: 60rpx;
-    }
+          .quota-line {
+              font-size: 26rpx;
+              color: #666;
+
+              .quota-num {
+                  color: #ff3b30;
+                  font-weight: bold;
+                  margin-left: 8rpx;
+              }
+          }
+      }
+
+      .book-btn {
+          margin: 0;
+          width: 180rpx;
+          height: 68rpx;
+          line-height: 68rpx;
+          background-color: #2f73f6;
+          color: #fff;
+          font-size: 28rpx;
+          border-radius: 34rpx;
+          padding: 0;
+          text-align: center;
+
+          &::after {
+              border: none;
+          }
+
+          &:active {
+              opacity: 0.8;
+          }
+      }
+  }
 }
 
-.task-card {
-    background: #fff;
-    border-radius: 20rpx;
-    padding: 30rpx;
-    border-left: 8rpx solid #ff9900; // 橙色代表待办
+/* 4. 近期行程卡片 */
+.appointment-section {
+  margin-bottom: 40rpx;
 
-    .task-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 16rpx;
+  .appointment-card {
+      background-color: #fff;
+      border-radius: 20rpx;
+      padding: 30rpx;
+      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
 
-        .time {
-            font-weight: bold;
-            font-size: 30rpx;
-        }
+      &.has-data {
+          .apt-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2rpx dashed #eee;
+              padding-bottom: 20rpx;
+              margin-bottom: 20rpx;
 
-        .status-text {
-            font-size: 26rpx;
-            color: #ff9900;
-        }
-    }
+              .apt-status {
+                  font-size: 24rpx;
+                  padding: 4rpx 12rpx;
+                  border-radius: 6rpx;
 
-    .task-body {
-        .content {
-            font-size: 28rpx;
-            color: #333;
-            display: block;
-            margin-bottom: 8rpx;
-        }
+                  &.pending {
+                      background-color: #fff3e0;
+                      color: #ff9800;
+                  }
+              }
 
-        .tips {
-            font-size: 24rpx;
-            color: #999;
-        }
-    }
+              .apt-date {
+                  font-size: 30rpx;
+                  font-weight: bold;
+                  color: #333;
+              }
+          }
+
+          .apt-body {
+              margin-bottom: 30rpx;
+
+              .info-row {
+                  display: flex;
+                  align-items: flex-start;
+                  margin-bottom: 16rpx;
+
+                  .iconfont {
+                      color: #999;
+                      font-size: 32rpx;
+                      margin-right: 16rpx;
+                      margin-top: 2rpx;
+                  }
+
+                  .text {
+                      flex: 1;
+                      font-size: 28rpx;
+                      color: #444;
+                      line-height: 1.5;
+                  }
+              }
+          }
+
+          .apt-footer {
+              display: flex;
+              justify-content: flex-end;
+              gap: 20rpx;
+
+              .btn {
+                  margin: 0;
+                  padding: 0 30rpx;
+                  height: 64rpx;
+                  line-height: 64rpx;
+                  font-size: 26rpx;
+                  border-radius: 32rpx;
+
+                  &::after {
+                      border: none;
+                  }
+              }
+
+              .plain-btn {
+                  background-color: #f5f7fa;
+                  color: #666;
+              }
+
+              .primary-btn {
+                  background-color: #007aff;
+                  color: #fff;
+              }
+          }
+      }
+
+      &.empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 50rpx 0;
+
+          .empty-img {
+              width: 200rpx;
+              height: 200rpx;
+              margin-bottom: 20rpx;
+              opacity: 0.8;
+          }
+
+          .empty-tip {
+              font-size: 28rpx;
+              color: #999;
+              margin-bottom: 30rpx;
+          }
+
+          .book-btn {
+              width: 60%;
+              height: 80rpx;
+              line-height: 80rpx;
+              border-radius: 40rpx;
+              background-color: #007aff;
+              color: #fff;
+              font-size: 30rpx;
+              font-weight: bold;
+              box-shadow: 0 8rpx 16rpx rgba(0, 122, 255, 0.3);
+          }
+      }
+  }
+}
+
+/* 5. 金刚区导航 */
+.grid-menu {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx 10rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+
+  .grid-item {
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 10rpx;
+
+      .icon-wrapper {
+          width: 88rpx;
+          height: 88rpx;
+          border-radius: 30%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 16rpx;
+
+          .iconfont {
+              font-size: 44rpx;
+          }
+      }
+
+      .menu-name {
+          font-size: 26rpx;
+          color: #333;
+      }
+  }
+}
+
+/* 6. 底部头条公告 */
+.notice-bar {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+
+  .notice-icon {
+      display: flex;
+      align-items: center;
+      margin-right: 20rpx;
+      border-right: 2rpx solid #eee;
+      padding-right: 20rpx;
+
+      .icon-notification {
+          color: #f56c6c;
+          font-size: 32rpx;
+          margin-right: 8rpx;
+      }
+
+      .notice-label {
+          font-size: 28rpx;
+          font-weight: bold;
+          color: #333;
+          font-style: italic;
+      }
+  }
+
+  .notice-swiper {
+      flex: 1;
+      height: 40rpx;
+      line-height: 40rpx;
+
+      .notice-content {
+          font-size: 26rpx;
+          color: #666;
+      }
+  }
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 底部安全区垫片：高度 = 你的自定义 Tabbar 高度 + 安全区底部距离 */
+.tabbar-spacer {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+  width: 100%;
 }
 </style>
