@@ -55,12 +55,7 @@
           <text class="sub-tip">（可多选）</text>
         </view>
         
-        <view class="empty-state" v-if="!selectedSubjectId">
-          <!-- <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image> -->
-          <text class="empty-text">请先选择练车科目</text>
-        </view>
-
-        <view class="session-grid" v-else-if="sessionList.length > 0">
+        <view class="session-grid" v-if="sessionList.length > 0">
           <view 
             class="session-item" 
             v-for="session in sessionList" 
@@ -81,9 +76,8 @@
           </view>
         </view>
 
-
         <view class="empty-state" v-else>
-          <!-- <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image> -->
+          <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image>
           <text class="empty-text">教练这一天休息或暂未排班哦</text>
         </view>
       </view>
@@ -117,7 +111,6 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { handleAvatar } from '@/utils/common';
-import { getAppointDetailData } from '@/api/student/appointDetail';
 
 // --- 接收上个页面传来的参数 ---
 const queryParams = reactive({
@@ -125,29 +118,42 @@ const queryParams = reactive({
   date: ''
 });
 
-// --- 响应式状态数据 ---
+// --- Mock 状态数据 ---
 const coachInfo = reactive({
   id: null,
-  name: '',
+  name: '张教练',
   avatar: '',
-  rating: 0,
-  teachingYears: 0,
-  price: 0 
+  rating: 4.9,
+  teachingYears: 8,
+  price: 0 // 如果是散客约私教，这里会有金额(如 150)；驾校学员则是 0
 });
 
 const dateList = ref([]);
 const selectedDate = ref('');
 
-// 练车内容 (科目与项目字典树)
-const subjectList = ref([]);
+// 练车内容
+const subjectList = ref([
+  { id: 2, name: '科目二' },
+  { id: 3, name: '科目三' }
+]);
 const selectedSubjectId = ref(null);
 
 const itemList = ref([]);
 const selectedItemId = ref(null);
 
+// 科目二的项目联动 Mock
+const mockItems = {
+  2: [
+    { id: 201, name: '倒车入库' }, { id: 202, name: '侧方停车' }, 
+    { id: 203, name: '坡道定点' }, { id: 204, name: '曲线行驶' }, { id: 205, name: '直角转弯' }
+  ],
+  3: [
+    { id: 301, name: '上车准备' }, { id: 302, name: '直线行驶' }, { id: 303, name: '靠边停车' }
+  ]
+};
+
 // 时段排班列表
 const sessionList = ref([]);
-const allSessionList = ref([]);
 
 // 用户选中的时段 (支持选多节课)
 const selectedSessions = ref([]);
@@ -171,17 +177,16 @@ onLoad((options) => {
     selectedDate.value = options.date;
     
     generateDateList();
-    fetchDetailData(); // 聚合请求替换了之前的两个 Mock 方法
-  } else {
-    uni.showToast({ title: '参数错误', icon: 'none' });
-    setTimeout(() => uni.navigateBack(), 1500);
+    fetchCoachDetail();
+    fetchDailySessions();
   }
 });
 
-// 1. 生成快捷日期轴 (7天，始终以今天为起点)
+// 1. 生成快捷日期轴 (7天)
 const generateDateList = () => {
   const weeks = ['日', '一', '二', '三', '四', '五', '六'];
   const list = [];
+  // 为了UX，我们把传进来的日期作为起点（或者今天作为起点）
   const startObj = new Date(); 
   
   for (let i = 0; i < 7; i++) {
@@ -200,78 +205,42 @@ const generateDateList = () => {
   dateList.value = list;
 };
 
-// 2. 核心：从后端拉取排班详情聚合数据
-const fetchDetailData = async () => {
-  if (!queryParams.coachId || !selectedDate.value) return;
-  
+// 2. Mock 获取教练简要信息
+const fetchCoachDetail = () => {
+  // TODO: 后端根据 queryParams.coachId 获取真实数据
+  coachInfo.id = queryParams.coachId;
+};
+
+// 3. Mock 获取某一天的排班时段
+const fetchDailySessions = () => {
   // 切换日期时，清空之前选中的时段
   selectedSessions.value = [];
   
-  try {
-    uni.showLoading({ title: '加载排班中...', mask: true });
-    const res = await getAppointDetailData({
-      coachId: queryParams.coachId,
-      date: selectedDate.value
-    });
-    
-    if (res.code === 200 && res.data) {
-      const data = res.data;
-      
-      // 1. 映射教练名片
-      if (data.coachInfo) {
-        Object.assign(coachInfo, data.coachInfo);
-      }
-
-      // 2. 映射时段网格
-      sessionList.value = data.sessionList || [];
-      allSessionList.value = data.sessionList || [];
-      
-      // 3. 映射科目与项目树
-      if (data.subjectList) {
-        subjectList.value = data.subjectList;
-        // 如果之前已经选了科目，切换日期时保持项目列表联动刷新
-        if (selectedSubjectId.value) {
-          const currentSub = subjectList.value.find(s => s.id === selectedSubjectId.value);
-          itemList.value = currentSub ? currentSub.itemList : [];
-        
-          // 时段刷新
-          const currentSes = allSessionList.value?.filter(s => s.subjectId === selectedSubjectId.value);
-
-          sessionList.value = currentSes || [];
-          selectedSessions.value = []; // 切换科目时清空已选时段
-        }
-      }
-      
-
-    } else {
-      uni.showToast({ title: res.msg || '获取排班失败', icon: 'none' });
-    }
-  } catch (error) {
-    console.error('获取排班详情异常:', error);
-  } finally {
+  // TODO: 调用后端接口查询排班
+  uni.showLoading({ title: '加载时段...' });
+  setTimeout(() => {
+    // 模拟数据：上午两节，下午两节
+    sessionList.value = [
+      { id: 1, startTime: '09:00', endTime: '10:00', availableCount: 3, status: 'available' },
+      { id: 2, startTime: '10:00', endTime: '11:00', availableCount: 0, status: 'full' }, // 已满不可选
+      { id: 3, startTime: '14:00', endTime: '15:00', availableCount: 1, status: 'available' },
+      { id: 4, startTime: '15:00', endTime: '16:00', availableCount: 4, status: 'available' },
+    ];
     uni.hideLoading();
-  }
+  }, 500);
 };
 
 // --- 交互事件 ---
 const selectDate = (dateStr) => {
   if (selectedDate.value === dateStr) return;
   selectedDate.value = dateStr;
-  fetchDetailData(); // 重新拉取该日期的真实排班
+  fetchDailySessions(); // 重新拉取该日期的排班
 };
 
 const selectSubject = (subjectId) => {
   selectedSubjectId.value = subjectId;
-  // 从后端传来的字典树中，提取当前科目对应的项目列表
-  const currentSub = subjectList.value.find(s => s.id === subjectId);
-  itemList.value = currentSub ? currentSub.itemList : [];
+  itemList.value = mockItems[subjectId] || [];
   selectedItemId.value = null; // 切换科目时清空已选项目
-
-  // 从后端传来的字典树中，提取当前科目对应的时段列表
-  const currentSes = allSessionList.value.filter(s => s.subjectId === subjectId);
-
-  sessionList.value = currentSes || [];
-  selectedSessions.value = []; // 切换科目时清空已选时段
 };
 
 const toggleSession = (session) => {
@@ -282,9 +251,10 @@ const toggleSession = (session) => {
   
   const index = selectedSessions.value.findIndex(s => s.id === session.id);
   if (index > -1) {
+    // 已选中则取消
     selectedSessions.value.splice(index, 1);
   } else {
-    // 限制一次最多约2个课时，防止恶意占座
+    // 没选中则加入 (驾校一般限制一次最多约2-3个课时，这里可以加限制)
     if (selectedSessions.value.length >= 2) {
       uni.showToast({ title: '一次最多只能预约 2 个时段哦', icon: 'none' });
       return;
@@ -307,7 +277,11 @@ const submitAppointment = () => {
   uni.showLoading({ title: '提交预约中...', mask: true });
   setTimeout(() => {
     uni.hideLoading();
-    uni.showToast({ title: '页面暂定，待接入下单接口！', icon: 'none' });
+    uni.showToast({ title: '预约成功！', icon: 'success' });
+    // 延迟返回，或者跳转到订单详情页
+    setTimeout(() => {
+      uni.navigateBack();
+    }, 1500);
   }, 1000);
 };
 </script>

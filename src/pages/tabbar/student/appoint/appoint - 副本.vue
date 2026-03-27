@@ -44,7 +44,7 @@
                 </view>
             </view>
 
-            <!-- <view class="coach-hall-section">
+            <view class="coach-hall-section">
 
                 <view class="warning-banner" v-if="!studentContext.schoolId" @click="goToGuide">
                     <text class="iconfont icon-info-circle"></text>
@@ -110,83 +110,6 @@
                         </block>
                     </view>
 
-                </view>
-            </view> -->
-
-            <view class="coach-hall-section">
-
-                <view class="warning-banner" v-if="!studentContext.schoolId" @click="goToGuide">
-                    <text class="iconfont icon-info-circle"></text>
-                    <text class="banner-text">您暂未绑定驾校，目前仅显示独立私教。点击去绑定驾校 ></text>
-                </view>
-
-                <view class="hall-top-bar">
-                    <text class="hall-title">找教练</text>
-                    <view class="manage-link" @click="goToMyCoaches">
-                        管理我的所有教练 <text class="iconfont icon-right"></text>
-                    </view>
-                </view>
-
-                <view class="hall-tabs">
-                    <view class="tab-item" :class="{ 'active': currentTab === 'my' }" @click="switchTab('my')">全部教练
-                    </view>
-
-                    <view class="tab-item" v-if="studentContext.schoolId" :class="{ 'active': currentTab === 'school' }"
-                        @click="switchTab('school')">本校教练</view>
-
-                    <view class="tab-item" :class="{ 'active': currentTab === 'independent' }"
-                        @click="switchTab('independent')">独立私教</view>
-                </view>
-
-                <view class="coach-list">
-                    <view class="coach-card" v-for="coach in currentCoachList" :key="coach.id"
-                        @click="goToCoachDetail(coach.id)">
-                        <image class="avatar" :src="handleAvatar(coach.avatar)" mode="aspectFill"></image>
-                        <view class="info">
-                            <view class="name-row">
-                                <text class="name">{{ coach.name }}</text>
-                                <text class="rating">⭐ {{ coach.rating }}</text>
-                            </view>
-                            <view class="tags-row">
-                                <text class="tag" v-for="(tag, idx) in coach.tags" :key="idx">{{ tag }}</text>
-                            </view>
-                            <view class="stat-row">
-                                <text class="exp">教龄 {{ coach.teachingYears }} 年</text>
-                                <text class="price" v-if="currentTab === 'independent'">￥{{ coach.price || 150
-                                    }}/时起</text>
-                            </view>
-                        </view>
-                        <view class="action">
-                            <button class="action-btn" :class="{ 'disabled': coach.quota === 0 }"
-                                @click.stop="goToSchedule(coach.id)">
-                                {{ coach.quota > 0 ? '约车' : '已满' }}
-                            </button>
-                        </view>
-                    </view>
-
-                    <view class="empty-state-card" v-if="currentCoachList.length === 0">
-                        <!-- <view class="empty-icon-wrap">
-                            <text class="iconfont icon-file-empty"></text>
-                        </view> -->
-
-                        <block v-if="currentTab === 'school'">
-                            <block v-if="!studentContext.coachId">
-                                <text class="empty-text">您还未绑定专属主教练</text>
-                                <button class="empty-btn" @click="goToSchoolDetail">前往驾校主页绑定</button>
-                            </block>
-                            <block v-else>
-                                <text class="empty-text">您的教练在所选日期暂无排班，请切换日期查看</text>
-                            </block>
-                        </block>
-
-                        <block v-else-if="currentTab === 'independent'">
-                            <text class="empty-text">该日期暂无独立私教排班</text>
-                        </block>
-
-                        <block v-else>
-                            <text class="empty-text">所选日期暂无教练排班，请查看其他日期</text>
-                        </block>
-                    </view>
                 </view>
             </view>
         </view>
@@ -974,23 +897,18 @@ const goToRecords = () => {
     align-items: center;
     margin-bottom: 30rpx;
 
-    /* 独立的圆角 Tab 栏 */
     .hall-tabs {
         display: flex;
         background-color: #fff;
-        border-radius: 20rpx;
-        padding: 12rpx;
-        // margin-bottom: 30rpx;
-        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.02);
+        border-radius: 16rpx;
+        padding: 10rpx;
 
         .tab-item {
-            flex: 1;
-            text-align: center;
-            padding: 16rpx 0;
+            padding: 12rpx 30rpx;
             font-size: 28rpx;
             color: #666;
-            border-radius: 14rpx;
-            transition: all 0.3s;
+            border-radius: 12rpx;
+            transition: all 0.2s;
 
             &.active {
                 background-color: #f0f7ff;
@@ -1147,86 +1065,5 @@ const goToRecords = () => {
 .tabbar-spacer {
     height: calc(120rpx + env(safe-area-inset-bottom));
     width: 100%;
-}
-
-/* 大厅标题栏与管理入口 */
-.hall-top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 20rpx;
-    padding: 0 10rpx;
-
-    .hall-title {
-        font-size: 34rpx;
-        font-weight: bold;
-        color: #333;
-    }
-
-    .manage-link {
-        font-size: 26rpx;
-        color: #007aff;
-        display: flex;
-        align-items: center;
-        font-weight: bold;
-
-        .iconfont {
-            font-size: 24rpx;
-            margin-left: 6rpx;
-            margin-top: 2rpx;
-        }
-    }
-}
-
-
-/* 升级后的卡片式空状态 */
-.empty-state-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: #fff;
-    border-radius: 20rpx;
-    padding: 80rpx 40rpx;
-    margin-top: 10rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.02);
-
-    .empty-icon-wrap {
-        width: 160rpx;
-        height: 160rpx;
-        background-color: #f5f7fa;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 30rpx;
-
-        .icon-file-empty {
-            font-size: 80rpx;
-            color: #c0c4cc;
-        }
-
-        /* 兜底图标 */
-    }
-
-    .empty-text {
-        font-size: 28rpx;
-        color: #999;
-        // margin-bottom: 30rpx;
-        text-align: center;
-        line-height: 1.5;
-    }
-
-    .empty-btn {
-        background-color: #f0f7ff;
-        color: #007aff;
-        height: 68rpx;
-        line-height: 68rpx;
-        font-size: 28rpx;
-        border-radius: 34rpx;
-        padding: 0 50rpx;
-        border: none;
-        font-weight: bold;
-    }
 }
 </style>

@@ -40,7 +40,7 @@
 
     <view class="quick-book-section" v-if="mainCoach">
       <view class="section-header">
-        <text class="title">快速预约</text>
+        <text class="title">预约练车</text>
       </view>
       <view class="quick-book-card">
         <image class="coach-avatar" :src="handleAvatar(mainCoach.avatar)" mode="aspectFill"></image>
@@ -54,6 +54,26 @@
           </view>
         </view>
         <button class="book-btn" @click="quickBook">立即预约</button>
+
+              <!-- <view class="grid-menu">
+      <view class="grid-item" v-for="(menu, index) in menuList" :key="index" @click="handleMenuClick(menu.path)">
+        <view class="icon-wrapper" :style="{ backgroundColor: menu.bgColor }">
+          <text class="iconfont" :class="menu.icon" :style="{ color: menu.iconColor }"></text>
+        </view>
+        <text class="menu-name">{{ menu.name }}</text>
+      </view>
+    </view> -->
+
+      </view>
+
+    </view>
+
+    <view class="grid-menu">
+      <view class="grid-item" v-for="(menu, index) in menuList" :key="index" @click="handleMenuClick(menu.path)">
+        <view class="icon-wrapper" :style="{ backgroundColor: menu.bgColor }">
+          <text class="iconfont" :class="menu.icon" :style="{ color: menu.iconColor }"></text>
+        </view>
+        <text class="menu-name">{{ menu.name }}</text>
       </view>
     </view>
 
@@ -85,20 +105,13 @@
       </view>
 
       <view class="appointment-card empty-state" v-else>
-        <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image>
+        <!-- <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image> -->
         <text class="empty-tip">近期暂无练车安排</text>
         <button class="book-btn" @click="goToBook">去看看排班</button>
       </view>
     </view>
 
-    <view class="grid-menu">
-      <view class="grid-item" v-for="(menu, index) in menuList" :key="index" @click="handleMenuClick(menu.path)">
-        <view class="icon-wrapper" :style="{ backgroundColor: menu.bgColor }">
-          <text class="iconfont" :class="menu.icon" :style="{ color: menu.iconColor }"></text>
-        </view>
-        <text class="menu-name">{{ menu.name }}</text>
-      </view>
-    </view>
+
 
     <view class="notice-bar" v-if="notices && notices.length > 0">
       <view class="notice-icon">
