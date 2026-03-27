@@ -199,37 +199,38 @@ const addAllInterceptors = () => {
   uni.addInterceptor("reLaunch", interceptorConfig);
 
   // 拦截 switchTab（跳转到 tabBar 页面）
-  // uni.addInterceptor("switchTab", {
-  //     ...interceptorConfig,
-  //     // invoke(args) {
-  //     //     console.log("跳转到Tab页:", args.url);
+  uni.addInterceptor("switchTab", {
+      ...interceptorConfig,
+      // invoke(args) {
+      //     console.log("跳转到Tab页:", args.url);
 
-  //     //     // Tab切换的特殊处理
-  //     //     const token = uni.getStorageSync('token');
-  //     //     const needLoginTabs = ['/pages/user/index'];
+      //     // Tab切换的特殊处理
+      //     const token = uni.getStorageSync('token');
+      //     const needLoginTabs = ['/pages/user/index'];
 
-  //     //     if (needLoginTabs.includes(args.url) && !token) {
-  //     //         uni.showModal({
-  //     //             title: '提示',
-  //     //             content: '该功能需要登录，是否前往登录？',
-  //     //             success(res) {
-  //     //                 if (res.confirm) {
-  //     //                     uni.navigateTo({
-  //     //                         url: '/pages/login/index'
-  //     //                     });
-  //     //                 }
-  //     //             }
-  //     //         });
-  //     //         return false;
-  //     //     }
+      //     if (needLoginTabs.includes(args.url) && !token) {
+      //         uni.showModal({
+      //             title: '提示',
+      //             content: '该功能需要登录，是否前往登录？',
+      //             success(res) {
+      //                 if (res.confirm) {
+      //                     uni.navigateTo({
+      //                         url: '/pages/login/index'
+      //                     });
+      //                 }
+      //             }
+      //         });
+      //         return false;
+      //     }
 
-  //     //     const result = beforeEach(args);
-  //     //     return result === false ? false : args;
-  //     // }
-  //     invoke(args) {
-  //       console.log(args)
-  //     }
-  // });
+      //     const result = beforeEach(args);
+      //     return result === false ? false : args;
+      // }
+      invoke(args) {
+        console.log("跳转到Tab页:");
+        console.log(args)
+      }
+  });
 
   // 拦截 navigateBack（返回上一页面或多级页面）
   uni.addInterceptor("navigateBack", {

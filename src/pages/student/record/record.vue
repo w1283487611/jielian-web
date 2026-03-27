@@ -76,122 +76,150 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, reactive, computed } from 'vue';
+import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { handleAvatar } from '@/utils/common';
+import { getRecordList } from '@/api/student/record';
 
 // --- Tab 选项配置 ---
 const tabOptions = [
-    { label: '全部', value: 'all' },
-    { label: '待确认', value: 0 },
-    { label: '待练车', value: 1 }, // 对应已确认
-    { label: '已完成', value: 3 },
-    { label: '已取消', value: 4 }
+  { label: '全部', value: 'all' },
+  { label: '待确认', value: 0 },
+  { label: '待练车', value: 1 }, // 后端已处理：传1会自动查出 1(已确认)和2(进行中)
+  { label: '已完成', value: 3 },
+  { label: '已取消', value: 4 }
 ];
 const currentTab = ref('all');
 
-// --- 模拟后端返回的订单记录数据 (Mock) ---
+// --- 列表与分页状态 ---
 const recordList = ref([]);
-
-onMounted(() => {
-    fetchRecords();
+const queryParams = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  status: null // null 代表全部
 });
+const total = ref(0);
+const loadStatus = ref('more'); // 'more'-还有数据, 'loading'-加载中, 'noMore'-没有更多了
 
-const fetchRecords = () => {
-    uni.showLoading({ title: '加载中...' });
-    setTimeout(() => {
-        recordList.value = [
-            {
-                id: 1001, appointmentNo: 'APT1700000001', coachId: 101, coachName: '张建国', coachAvatar: '',
-                date: '今天 (03-27)', time: '14:00 - 15:00', subjectName: '科目二', itemName: '倒车入库',
-                locationName: '捷练第三训练场', status: 0, isReviewed: false
-            },
-            {
-                id: 1002, appointmentNo: 'APT1700000002', coachId: 102, coachName: '李伟', coachAvatar: '',
-                date: '昨天 (03-26)', time: '09:00 - 10:00', subjectName: '科目三', itemName: '靠边停车',
-                locationName: '科目三实际道路考场', status: 1, isReviewed: false
-            },
-            {
-                id: 1003, appointmentNo: 'APT1700000003', coachId: 101, coachName: '张建国', coachAvatar: '',
-                date: '03-20', time: '10:00 - 12:00', subjectName: '科目二', itemName: '侧方停车',
-                locationName: '捷练第一训练场', status: 3, isReviewed: false // 未评价
-            },
-            {
-                id: 1004, appointmentNo: 'APT1700000004', coachId: 201, coachName: '刘私教', coachAvatar: '',
-                date: '03-15', time: '15:00 - 16:00', subjectName: '科目二', itemName: '曲线行驶',
-                locationName: '捷练第一训练场', status: 4, isReviewed: false
-            }
-        ];
-        uni.hideLoading();
-    }, 500);
+// --- 核心网络请求逻辑 ---
+const fetchRecords = async (isRefresh = true) => {
+  if (isRefresh) {
+    queryParams.pageNum = 1;
+    loadStatus.value = 'loading';
+  } else {
+    if (loadStatus.value === 'noMore') return;
+    queryParams.pageNum++;
+    loadStatus.value = 'loading';
+  }
+
+  try {
+    // 映射 Tab 状态给后端
+    queryParams.status = currentTab.value === 'all' ? null : currentTab.value;
+    
+    const res = await getRecordList(queryParams);
+    
+    if (res.code === 200) {
+      const rows = res.rows || [];
+      total.value = res.total || 0;
+      
+      if (isRefresh) {
+        recordList.value = rows;
+        uni.stopPullDownRefresh(); // 停止下拉动画
+      } else {
+        recordList.value = [...recordList.value, ...rows]; // 追加数据
+      }
+      
+      // 判断是否还有下一页
+      loadStatus.value = recordList.value.length >= total.value ? 'noMore' : 'more';
+    } else {
+      uni.showToast({ title: res.msg || '获取记录失败', icon: 'none' });
+      loadStatus.value = 'more';
+    }
+  } catch (error) {
+    console.error('获取练车记录异常:', error);
+    loadStatus.value = 'more';
+    if (isRefresh) uni.stopPullDownRefresh();
+  }
 };
 
-// --- 计算属性与辅助函数 ---
+// --- 生命周期钩子 ---
 
-// 根据 Tab 过滤列表
-const filteredRecords = computed(() => {
-    if (currentTab.value === 'all') {
-        return recordList.value;
-    }
-    // 将 "进行中(2)" 合并到 "待练车(1)" 的 Tab 中展示
-    if (currentTab.value === 1) {
-        return recordList.value.filter(r => r.status === 1 || r.status === 2);
-    }
-    return recordList.value.filter(r => r.status === currentTab.value);
+// 每次进入页面时刷新，保证订单状态(如刚评价完、刚约完)是最新的
+onShow(() => {
+  fetchRecords(true);
 });
 
-// 状态文字映射
+// 用户下拉刷新
+onPullDownRefresh(() => {
+  fetchRecords(true);
+});
+
+// 用户上拉触底加载下一页
+onReachBottom(() => {
+  if (loadStatus.value === 'more') {
+    fetchRecords(false);
+  }
+});
+
+// --- 辅助函数与前端计算 ---
+
+// 我们不再需要 computed 过滤了，因为筛选已经交给了后端数据库！
+const filteredRecords = computed(() => recordList.value);
+
 const getStatusText = (status) => {
-    const map = {
-        0: '待确认',
-        1: '待练车',
-        2: '进行中',
-        3: '已完成',
-        4: '已取消',
-        5: '申诉中'
-    };
-    return map[status] || '未知状态';
+  const map = {
+    0: '待确认',
+    1: '待练车',
+    2: '进行中',
+    3: '已完成',
+    4: '已取消',
+    5: '申诉中'
+  };
+  return map[status] || '未知状态';
 };
 
 // --- 交互事件 ---
 const switchTab = (value) => {
-    currentTab.value = value;
+  if (currentTab.value === value) return;
+  currentTab.value = value;
+  // 切换 Tab 时重置分页并刷新
+  fetchRecords(true);
 };
 
 const cancelAppointment = (id) => {
-    uni.showModal({
-        title: '取消预约',
-        content: '距离练车时间不足2小时取消可能产生违约记录，确认取消吗？',
-        success: (res) => {
-            if (res.confirm) {
-                uni.showToast({ title: '已取消', icon: 'success' });
-                // TODO: 调用后端接口变更状态，成功后重新拉取列表
-                const record = recordList.value.find(r => r.id === id);
-                if (record) record.status = 4;
-            }
-        }
-    });
+  uni.showModal({
+    title: '取消预约',
+    content: '距离练车时间不足2小时取消可能产生违约记录，确认取消吗？',
+    success: (res) => {
+      if (res.confirm) {
+        // TODO: 接通真实的取消订单 API (调用 /student/record/cancel)
+        uni.showToast({ title: '已取消 (待接入后端)', icon: 'none' });
+      }
+    }
+  });
 };
 
 const remindCoach = () => {
-    uni.showToast({ title: '已向教练发送提醒催单', icon: 'success' });
+  // TODO: 发送模板消息给教练
+  uni.showToast({ title: '已向教练发送提醒催单', icon: 'success' });
 };
 
 const showCheckInCode = (appointmentNo) => {
-    uni.showModal({
-        title: '练车签到码',
-        content: `您的核销码：${appointmentNo.substring(appointmentNo.length - 6)}\n请在上车前向教练出示。`,
-        showCancel: false,
-        confirmText: '我知道了'
-    });
+  uni.showModal({
+    title: '练车签到码',
+    content: `您的核销码：${appointmentNo.substring(appointmentNo.length - 6)}\n请在上车前向教练出示。`,
+    showCancel: false,
+    confirmText: '我知道了'
+  });
 };
 
 const goToReview = (id) => {
-    uni.showToast({ title: '前往评价页...', icon: 'none' });
-    // uni.navigateTo({ url: `/pages/student/review/review?appointmentId=${id}` });
+  uni.showToast({ title: '前往评价页...', icon: 'none' });
+  // uni.navigateTo({ url: `/pages/student/review/review?appointmentId=${id}` });
 };
 
 const rebookCoach = (coachId) => {
-    uni.navigateTo({ url: `/pages/student/appoint-detail/appoint-detail?coachId=${coachId}&date=${new Date().toISOString().split('T')[0]}` });
+  uni.navigateTo({ url: `/pages/student/appoint-detail/appoint-detail?coachId=${coachId}&date=${new Date().toISOString().split('T')[0]}` });
 };
 </script>
 

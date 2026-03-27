@@ -117,7 +117,7 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { handleAvatar } from '@/utils/common';
-import { getAppointDetailData } from '@/api/student/appointDetail';
+import { getAppointDetailData, submitAppointmentOrder } from '@/api/student/appointDetail';
 
 // --- 接收上个页面传来的参数 ---
 const queryParams = reactive({
@@ -293,7 +293,8 @@ const toggleSession = (session) => {
   }
 };
 
-const submitAppointment = () => {
+const submitAppointment = async () => {
+  // 1. 前端基础防呆校验
   if (!selectedSubjectId.value) {
     uni.showToast({ title: '请先选择练车科目', icon: 'none' });
     return;
@@ -304,11 +305,56 @@ const submitAppointment = () => {
   }
   
   // TODO: 构造订单数据，调用后端创建预约单接口
-  uni.showLoading({ title: '提交预约中...', mask: true });
-  setTimeout(() => {
+  // uni.showLoading({ title: '提交预约中...', mask: true });
+  // setTimeout(() => {
+  //   uni.hideLoading();
+  //   uni.showToast({ title: '页面暂定，待接入下单接口！', icon: 'none' });
+  // }, 1000);
+  // 2. 构造符合 SubmitAppointmentDto 规范的 Payload
+  const payload = {
+    coachId: queryParams.coachId,
+    date: selectedDate.value,
+    subjectId: selectedSubjectId.value,
+    itemId: selectedItemId.value || null, // 没选具体项目传 null
+    // 使用 map 提取出所有选中时段的 ID
+    sessionIds: selectedSessions.value.map(session => session.id) 
+  };
+  
+  // 3. 发送请求，锁定名额
+  try {
+    uni.showLoading({ title: '正在为您锁单...', mask: true });
+    
+    const res = await submitAppointmentOrder(payload);
+    
+    if (res.code === 200) {
+      // 下单成功
+      uni.showToast({ title: '预约成功！', icon: 'success' });
+      
+      // 延迟 1.5 秒后，跳转到“练车记录”页面，让学员查看这笔“待确认”的订单
+      setTimeout(() => {
+        uni.navigateTo({
+          url: '/pages/student/record/record'
+        });
+      }, 1500);
+      
+    } else {
+      // 下单失败 (例如手慢了被别人抢光，触发了后端的 RuntimeException)
+      uni.showModal({
+        title: '预约失败',
+        content: res.msg || '该时段名额可能已被抢空，请重试',
+        showCancel: false,
+        success: () => {
+          // 刷新当前页面的排班数据，让学员看到最新的剩余名额
+          fetchDetailData(); 
+        }
+      });
+    }
+  } catch (error) {
+    console.error('提交预约请求异常:', error);
+    uni.showToast({ title: '网络开小差了，请重试', icon: 'none' });
+  } finally {
     uni.hideLoading();
-    uni.showToast({ title: '页面暂定，待接入下单接口！', icon: 'none' });
-  }, 1000);
+  }
 };
 </script>
 

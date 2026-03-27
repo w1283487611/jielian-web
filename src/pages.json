@@ -61,6 +61,21 @@
 			}
 		},
 		{
+			"path": "pages/tabbar/student/test/test",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationBarBackgroundColor": "#3875EA",
+				"navigationBarTextStyle": "white",
+				"app-plus": {
+					// #ifdef APP-PLUS
+					"titleNView": {
+						"type": "default"
+					}
+					// #endif
+				}
+			}
+		},
+		{
 			"path": "pages/tabbar/student/my/my",
 			"style": {
 				"navigationBarTitleText": "我的",
@@ -160,7 +175,22 @@
 				{
 					"path": "appoint-detail/appoint-detail",
 					"style": {
-						"navigationBarTitleText": "预约详情",
+						"navigationBarTitleText": "预约选择",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "record/record",
+					"style": {
+						"navigationBarTitleText": "预约记录",
 						"navigationBarBackgroundColor": "#3875EA",
 						"navigationBarTextStyle": "white",
 						"app-plus": {
@@ -236,33 +266,39 @@
 				"pagePath": "pages/index/index",
 				"text": "首页",
 				"iconPath": "/static/assets/images/tabbar/home.png",
-				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
+				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png"
 			},
 			// 学员tabbar
 			{
 				"pagePath": "pages/tabbar/student/index/index",
 				"text": "首页",
 				"iconPath": "/static/assets/images/tabbar/home.png",
-				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
+				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png"
 			},
 			{
 				"pagePath": "pages/tabbar/student/appoint/appoint",
 				"text": "预约",
 				"iconPath": "/static/assets/images/tabbar/appoint.png",
-				"selectedIconPath": "/static/assets/images/tabbar/appointHL.png",
+				"selectedIconPath": "/static/assets/images/tabbar/appointHL.png"
+			},
+			{
+				"pagePath": "pages/tabbar/student/test/test",
+				"text": "学员",
+				"iconPath": "/static/assets/images/tabbar/appoint.png",
+				"selectedIconPath": "/static/assets/images/tabbar/appointHL.png"
 			},
 			{
 				"pagePath": "pages/tabbar/student/my/my",
 				"text": "我的",
 				"iconPath": "/static/assets/images/tabbar/personal.png",
-				"selectedIconPath": "/static/assets/images/tabbar/personalHL.png",
+				"selectedIconPath": "/static/assets/images/tabbar/personalHL.png"
 			},
 			// 教练tabbar
 			{
 				"pagePath": "pages/tabbar/coach/index/index",
 				"text": "首页",
 				"iconPath": "/static/assets/images/tabbar/home.png",
-				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png",
+				"selectedIconPath": "/static/assets/images/tabbar/homeHL.png"
 			}
 		],
 		// #endif 

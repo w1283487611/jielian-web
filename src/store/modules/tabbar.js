@@ -62,7 +62,7 @@ const COACH_TAB_TEMPLATE = [
     badge: 0,
   },
   {
-    pagePath: "/pages/tabbar/coach/cart/cart",
+    pagePath: "/pages/tabbar/coach/test/test",
     text: "教练",
     iconPath: "/static/assets/images/tabbar/personal.png",
     selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
