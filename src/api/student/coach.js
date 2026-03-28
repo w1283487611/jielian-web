@@ -24,3 +24,11 @@ export function getCoachDetail(id) {
     method: 'get'
   });
 }
+
+// 获取我的教练列表 (主教练 + 历史教练)
+export function getMyCoachList() {
+  return request({
+    url: '/student/coach/my-list',
+    method: 'get'
+  });
+}

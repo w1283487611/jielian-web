@@ -35,12 +35,12 @@
         <navigator url="/pages/student/guide/guide" open-type="navigate" class="link-type">
             引导页
         </navigator>
-        <navigator url="/pages/student/my-coach/my-coach" open-type="navigate" class="link-type">
+        <!-- <navigator url="/pages/student/my-coach/my-coach" open-type="navigate" class="link-type">
             我的教练页
         </navigator>
         <navigator url="/pages/student/appoint-detail/appoint-detail" open-type="navigate" class="link-type">
             预约详情页
-        </navigator>
+        </navigator> -->
         <!-- 头部统计卡片 -->
         <view class="header-card">
             <view class="user-welcome">
@@ -94,6 +94,7 @@
         </view>
     </view>
     <!-- 自定义 TabBar -->
+    <view class="tabbar-spacer"></view>
     <tabbar />
 </template>
 
@@ -583,5 +584,11 @@ onLoad(() => {
             color: #999;
         }
     }
+}
+
+/* 底部安全区垫片：高度 = 你的自定义 Tabbar 高度 + 安全区底部距离 */
+.tabbar-spacer {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+  width: 100%;
 }
 </style>

@@ -4,7 +4,7 @@
       <view class="greeting-box">
         <text class="greeting-text">{{ greeting }}，{{ studentInfo.name || '学员' }}</text>
         <text class="sub-text" v-if="studentInfo.schoolName">当前绑定：{{ studentInfo.schoolName }}</text>
-        <text class="sub-text warn-text" v-else @click="goToGuide">{{"您还未绑定驾校，去绑定 >"}}</text>
+        <text class="sub-text warn-text" v-else @click="goToGuide">{{ "您还未绑定驾校，去绑定 >" }}</text>
       </view>
       <view class="avatar-box">
         <image class="avatar" :src="handleAvatar(studentInfo.avatar)" mode="aspectFill"></image>
@@ -42,7 +42,7 @@
       <view class="section-header">
         <text class="title">预约练车</text>
       </view>
-      <view class="quick-book-card">
+      <!-- <view class="quick-book-card">
         <image class="coach-avatar" :src="handleAvatar(mainCoach.avatar)" mode="aspectFill"></image>
         <view class="coach-info">
           <view class="name-line">
@@ -55,6 +55,20 @@
         </view>
         <button class="book-btn" @click="quickBook">立即预约</button>
 
+      </view> -->
+
+      <view class="quick-book-card" @click="goToCoachDetail(mainCoach.coachId)">
+        <image class="coach-avatar" :src="handleAvatar(mainCoach.avatar)" mode="aspectFill"></image>
+        <view class="coach-info">
+          <view class="name-line">
+            <text class="coach-name">{{ mainCoach.name }}</text>
+            <text class="coach-tag primary">主教练</text>
+          </view>
+          <view class="quota-line">
+            今日剩余名额：<text class="quota-num">{{ mainCoach.todayQuota }}</text>
+          </view>
+        </view>
+        <button class="book-btn" @click.stop="quickBook">立即预约</button>
       </view>
 
     </view>
@@ -151,7 +165,7 @@ const greeting = computed(() => {
 
 // 学员基础信息 (赋空初值)
 const studentInfo = reactive({
-  name: '', avatar: '', schoolName: '', licenseCode: '',
+  name: '', avatar: '', schoolId: '', schoolName: '', licenseCode: '',
   currentSubject: '', totalHours: 0, totalAppoints: 0, passRate: 0
 });
 
@@ -208,17 +222,59 @@ onPullDownRefresh(() => {
 // --- 交互事件 ---
 const goToGuide = () => { uni.navigateTo({ url: '/pages/student/guide/guide' }); };
 const goToBook = () => {
-  // uni.s({ url: '/pages/tabbar/student/appoint/appoint' }); 
+  // ({ url: '/pages/tabbar/student/appoint/appoint' }); 
   tabbarStore.switchTab(1); // 索引为1的tabbar是预约tabbar页面
 };
-const quickBook = () => { uni.showToast({ title: '拉起快速预约...', icon: 'none' }); };
 const goToRecords = () => { uni.navigateTo({ url: '/pages/student/record/record' }); };
+
+// --- 辅助方法：获取今天的格式化日期 (YYYY-MM-DD) ---
+const getTodayDateString = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// 点击卡片空白处，前往教练名片详情页
+const goToCoachDetail = (coachId) => {
+  if (coachId) {
+    uni.navigateTo({ url: `/pages/student/coach-detail/coach-detail?id=${coachId}` });
+  }
+};
+
+// 拉起主教练的快速预约
+const quickBook = () => {
+  if (!mainCoach.value || !mainCoach.value.coachId) {
+    uni.showToast({ title: '主教练信息获取失败', icon: 'none' });
+    return;
+  }
+
+  // 获取今天的日期
+  const todayStr = getTodayDateString();
+
+  // 携带教练 ID 和 今天日期，直接穿透跳转到排班时段选择页
+  uni.navigateTo({
+    url: `/pages/student/appoint-detail/appoint-detail?coachId=${mainCoach.value.coachId}&date=${todayStr}`
+  });
+};
+
 
 const handleMenuClick = (path) => {
   if (path) {
     if (path.includes('/pages/tabbar/student/appoint/appoint')) {
       tabbarStore.switchTab(1); // 索引为1的tabbar是预约tabbar页面
-    } else uni.navigateTo({ url: path });
+    }
+    // else if(path.includes('/pages/student/my-coach/my-coach')) {
+    //   if(mainCoach.value?.coachId)
+    //   uni.navigateTo({ url: path });
+    // } // '/pages/student/school-detail/school-detail'
+    else if (path.includes('/pages/student/school-detail/school-detail')) {
+      if (studentInfo.schoolId)
+        uni.navigateTo({ url: path + "?id=" +  studentInfo.schoolId});
+      else uni.showToast({ title: '学员暂无驾校，请先绑定驾校', icon: 'none' });
+    } 
+    else uni.navigateTo({ url: path });
   } else {
     uni.showToast({ title: '功能开发中', icon: 'none' });
   }
@@ -417,6 +473,88 @@ const showCheckInCode = (appointmentNo) => {
 }
 
 /* 3. 快速预约主教练 (根据UI图还原) */
+// .quick-book-section {
+//   margin-bottom: 40rpx;
+
+//   .quick-book-card {
+//     display: flex;
+//     align-items: center;
+//     background-color: #fff;
+//     border-radius: 20rpx;
+//     padding: 30rpx;
+//     box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+
+//     .coach-avatar {
+//       width: 100rpx;
+//       height: 100rpx;
+//       border-radius: 50%;
+//       background-color: #eee;
+//       margin-right: 24rpx;
+//     }
+
+//     .coach-info {
+//       flex: 1;
+//       display: flex;
+//       flex-direction: column;
+//       justify-content: center;
+
+//       .name-line {
+//         display: flex;
+//         align-items: center;
+//         margin-bottom: 12rpx;
+
+//         .coach-name {
+//           font-size: 32rpx;
+//           font-weight: bold;
+//           color: #333;
+//           margin-right: 12rpx;
+//         }
+
+//         .coach-tag {
+//           font-size: 20rpx;
+//           color: #3b82f6;
+//           background-color: #eff6ff;
+//           padding: 4rpx 12rpx;
+//           border-radius: 6rpx;
+//         }
+//       }
+
+//       .quota-line {
+//         font-size: 26rpx;
+//         color: #666;
+
+//         .quota-num {
+//           color: #ff3b30;
+//           font-weight: bold;
+//           margin-left: 8rpx;
+//         }
+//       }
+//     }
+
+//     .book-btn {
+//       margin: 0;
+//       width: 180rpx;
+//       height: 68rpx;
+//       line-height: 68rpx;
+//       background-color: #2f73f6;
+//       color: #fff;
+//       font-size: 28rpx;
+//       border-radius: 34rpx;
+//       padding: 0;
+//       text-align: center;
+
+//       &::after {
+//         border: none;
+//       }
+
+//       &:active {
+//         opacity: 0.8;
+//       }
+//     }
+//   }
+// }
+
+/* 3. 快速预约主教练 */
 .quick-book-section {
   margin-bottom: 40rpx;
 
@@ -427,6 +565,8 @@ const showCheckInCode = (appointmentNo) => {
     border-radius: 20rpx;
     padding: 30rpx;
     box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+    /* 增加标志性的左侧高亮边框 */
+    border-left: 8rpx solid #007aff;
 
     .coach-avatar {
       width: 100rpx;
@@ -434,6 +574,8 @@ const showCheckInCode = (appointmentNo) => {
       border-radius: 50%;
       background-color: #eee;
       margin-right: 24rpx;
+      border: 2rpx solid #eee;
+      /* 统一加上细微描边 */
     }
 
     .coach-info {
@@ -454,12 +596,26 @@ const showCheckInCode = (appointmentNo) => {
           margin-right: 12rpx;
         }
 
+        /* 同步多态标签样式 */
         .coach-tag {
           font-size: 20rpx;
-          color: #3b82f6;
-          background-color: #eff6ff;
           padding: 4rpx 12rpx;
           border-radius: 6rpx;
+
+          &.primary {
+            background-color: #eff6ff;
+            color: #3b82f6;
+          }
+
+          &.warning {
+            background-color: #fffbeb;
+            color: #f59e0b;
+          }
+
+          &.success {
+            background-color: #ecfdf5;
+            color: #10b981;
+          }
         }
       }
 
@@ -477,13 +633,13 @@ const showCheckInCode = (appointmentNo) => {
 
     .book-btn {
       margin: 0;
-      width: 180rpx;
-      height: 68rpx;
-      line-height: 68rpx;
+      width: 160rpx;
+      height: 60rpx;
+      line-height: 60rpx;
       background-color: #2f73f6;
       color: #fff;
-      font-size: 28rpx;
-      border-radius: 34rpx;
+      font-size: 26rpx;
+      border-radius: 30rpx;
       padding: 0;
       text-align: center;
 

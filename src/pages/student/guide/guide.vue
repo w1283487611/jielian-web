@@ -172,6 +172,9 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
 import SchoolFilter from '@/components/business/school-filter/school-filter.vue';
 import CoachFilter from '@/components/business/coach-filter/coach-filter.vue';
+import useTabbarStore from '@/store/modules/tabbar';
+
+const tabbarStore = useTabbarStore();
 
 // 引入后端 API 请求方法
 import { getLicenseList } from '@/api/client/license';
@@ -357,9 +360,10 @@ const submitGuide = async (isSkip = false) => {
       uni.showToast({ title: '设置成功', icon: 'success' });
       // 延迟跳转至学员首页，给予 Toast 显示时间
       setTimeout(() => {
-        uni.switchTab({
-          url: '/pages/tabbar/student/index/index'
-        });
+        // uni.switchTab({
+        //   url: '/pages/tabbar/student/index/index'
+        // });
+        tabbarStore.switchTab(0); //索引0为角色tabbar主页
       }, 800);
     } else {
       uni.showToast({ title: res.msg || '设置失败', icon: 'none' });
