@@ -25,3 +25,11 @@ export function deleteAppointmentRecord(id) {
     method: 'delete'
   });
 }
+
+// 学员提醒教练确认订单
+export function remindCoachOrder(id) {
+  return request({
+    url: `/student/record/remind/${id}`,
+    method: 'post'
+  });
+}

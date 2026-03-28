@@ -42,7 +42,7 @@
                 <view class="card-footer">
                     <block v-if="record.status === 0">
                         <button class="btn plain-btn" @click="cancelAppointment(record.id)">取消预约</button>
-                        <button class="btn primary-btn plain" @click="remindCoach">提醒确认</button>
+                        <button class="btn primary-btn plain" @click="remindCoach(record.id)">提醒确认</button>
                     </block>
 
                     <block v-else-if="record.status === 1">
@@ -81,7 +81,7 @@
 import { ref, reactive, computed } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { handleAvatar } from '@/utils/common';
-import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord,  } from '@/api/student/record';
+import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord, remindCoachOrder,  } from '@/api/student/record';
 
 // --- Tab 选项配置 ---
 const tabOptions = [
@@ -258,9 +258,31 @@ const cancelAppointment = (id) => {
     });
 };
 
-const remindCoach = () => {
-    // TODO: 发送模板消息给教练
-    uni.showToast({ title: '已向教练发送提醒催单', icon: 'success' });
+// 提醒确认教练
+const remindCoach = async (id) => {
+  try {
+    uni.showLoading({ title: '发送提醒中...', mask: true });
+    
+    const res = await remindCoachOrder(id);
+    
+    if (res.code === 200) {
+      // 成功触发
+      uni.showToast({ title: '已向教练发送加急提醒', icon: 'success' });
+    } else {
+      // 触发 Redis 频控拦截，弹出温馨提示 (如：您已经提醒过了，请耐心等待...(X分钟后可再次提醒))
+      uni.showModal({
+        title: '提醒太频繁啦',
+        content: res.msg,
+        showCancel: false,
+        confirmText: '我知道了'
+      });
+    }
+  } catch (error) {
+    console.error('发送催单提醒异常:', error);
+    uni.showToast({ title: '网络异常，请重试', icon: 'none' });
+  } finally {
+    uni.hideLoading();
+  }
 };
 
 const showCheckInCode = (appointmentNo) => {
