@@ -74,14 +74,45 @@
 
             <view class="bottom-tips" v-if="filteredRecords.length > 0">已经到底啦~</view>
         </view>
+
+        <view class="checkin-modal-mask" v-if="showCheckInModal" @click="closeCheckInCode">
+            <view class="checkin-modal-content" @click.stop>
+                <view class="modal-header">
+                    <text class="title">练车签到码</text>
+                    <text class="iconfont icon-close close-btn" @click="closeCheckInCode"></text>
+                </view>
+
+                <view class="modal-body">
+                    <text class="tips">请在上车前向教练出示此码</text>
+
+                    <!-- <view class="qrcode-box">
+                        <image class="mock-qrcode" src="/static/assets/images/mock-qrcode.png" mode="aspectFit"></image>
+                    </view> -->
+                    <view class="qrcode-box">
+                        <canvas id="qrcode-canvas" canvas-id="qrcode-canvas"
+                            style="width: 180px; height: 180px;"></canvas>
+                    </view>
+
+                    <view class="code-text-box">
+                        <text class="label">数字核销码</text>
+                        <text class="code-number">{{ currentCheckInCode }}</text>
+                    </view>
+                </view>
+
+                <view class="modal-footer">
+                    <text class="warning-text">注：扫码确认后即开始计算学时，请确保到达场地。</text>
+                </view>
+            </view>
+        </view>
     </view>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
+import UQRCode from 'uqrcodejs';
 import { handleAvatar } from '@/utils/common';
-import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord, remindCoachOrder,  } from '@/api/student/record';
+import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord, remindCoachOrder, } from '@/api/student/record';
 
 // --- Tab 选项配置 ---
 const tabOptions = [
@@ -101,8 +132,14 @@ const queryParams = reactive({
     pageSize: 10,
     status: null // null 代表全部
 });
+
 const total = ref(0);
 const loadStatus = ref('more'); // 'more'-还有数据, 'loading'-加载中, 'noMore'-没有更多了
+
+// --- 核销码弹窗状态 ---
+const showCheckInModal = ref(false);
+const currentCheckInCode = ref('');
+const currentAppointmentNo = ref('');
 
 // --- 核心网络请求逻辑 ---
 const fetchRecords = async (isRefresh = true) => {
@@ -147,32 +184,63 @@ const fetchRecords = async (isRefresh = true) => {
 
 // 删除记录
 const deleteRecord = (id) => {
-  uni.showModal({
-    title: '删除记录',
-    content: '确认删除这条练车记录吗？删除后将无法查看。',
-    confirmColor: '#ff3b30',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          uni.showLoading({ title: '删除中...', mask: true });
-          const response = await deleteAppointmentRecord(id);
-          
-          if (response.code === 200) {
-            uni.showToast({ title: '已删除', icon: 'success' });
-            // 删除成功后，无缝刷新列表
-            fetchRecords(true);
-          } else {
-            uni.showToast({ title: response.msg || '删除失败', icon: 'none' });
-          }
-        } catch (error) {
-          console.error('删除订单异常:', error);
-          uni.showToast({ title: '网络开小差了，请重试', icon: 'none' });
-        } finally {
-          uni.hideLoading();
+    uni.showModal({
+        title: '删除记录',
+        content: '确认删除这条练车记录吗？删除后将无法查看。',
+        confirmColor: '#ff3b30',
+        success: async (res) => {
+            if (res.confirm) {
+                try {
+                    uni.showLoading({ title: '删除中...', mask: true });
+                    const response = await deleteAppointmentRecord(id);
+
+                    if (response.code === 200) {
+                        uni.showToast({ title: '已删除', icon: 'success' });
+                        // 删除成功后，无缝刷新列表
+                        fetchRecords(true);
+                    } else {
+                        uni.showToast({ title: response.msg || '删除失败', icon: 'none' });
+                    }
+                } catch (error) {
+                    console.error('删除订单异常:', error);
+                    uni.showToast({ title: '网络开小差了，请重试', icon: 'none' });
+                } finally {
+                    uni.hideLoading();
+                }
+            }
         }
-      }
-    }
-  });
+    });
+};
+
+// 生成二维码的核心逻辑
+const generateQRCode = (text) => {
+  const qr = new UQRCode();
+  qr.data = text;
+  qr.size = 180; // 这里的数值必须与 template 中 canvas 的 px 大小保持一致
+  qr.useDynamicSize = false;
+  qr.make();
+  
+  // 获取 uni 的 canvas 上下文并绘制
+  const ctx = uni.createCanvasContext('qrcode-canvas');
+  qr.canvasContext = ctx;
+  qr.drawCanvas();
+};
+
+// 真实接轨：出示签到码 (呼出弹窗)
+const showCheckInCode = (appointmentNo) => {
+    currentAppointmentNo.value = appointmentNo;
+    // 提取订单号的后 6 位作为纯数字核销码（方便教练手机摄像头坏了时手动输入）
+    currentCheckInCode.value = appointmentNo.substring(appointmentNo.length - 6);
+
+    showCheckInModal.value = true;
+
+    // uQRCode 插件，调用生成二维码
+    generateQRCode(JSON.stringify({ type: 'checkin', no: appointmentNo }));
+};
+
+// 关闭核销码弹窗
+const closeCheckInCode = () => {
+    showCheckInModal.value = false;
 };
 
 // --- 生命周期钩子 ---
@@ -260,39 +328,39 @@ const cancelAppointment = (id) => {
 
 // 提醒确认教练
 const remindCoach = async (id) => {
-  try {
-    uni.showLoading({ title: '发送提醒中...', mask: true });
-    
-    const res = await remindCoachOrder(id);
-    
-    if (res.code === 200) {
-      // 成功触发
-      uni.showToast({ title: '已向教练发送加急提醒', icon: 'success' });
-    } else {
-      // 触发 Redis 频控拦截，弹出温馨提示 (如：您已经提醒过了，请耐心等待...(X分钟后可再次提醒))
-      uni.showModal({
-        title: '提醒太频繁啦',
-        content: res.msg,
-        showCancel: false,
-        confirmText: '我知道了'
-      });
+    try {
+        uni.showLoading({ title: '发送提醒中...', mask: true });
+
+        const res = await remindCoachOrder(id);
+
+        if (res.code === 200) {
+            // 成功触发
+            uni.showToast({ title: '已向教练发送加急提醒', icon: 'success' });
+        } else {
+            // 触发 Redis 频控拦截，弹出温馨提示 (如：您已经提醒过了，请耐心等待...(X分钟后可再次提醒))
+            uni.showModal({
+                title: '提醒太频繁啦',
+                content: res.msg,
+                showCancel: false,
+                confirmText: '我知道了'
+            });
+        }
+    } catch (error) {
+        console.error('发送催单提醒异常:', error);
+        uni.showToast({ title: '网络异常，请重试', icon: 'none' });
+    } finally {
+        uni.hideLoading();
     }
-  } catch (error) {
-    console.error('发送催单提醒异常:', error);
-    uni.showToast({ title: '网络异常，请重试', icon: 'none' });
-  } finally {
-    uni.hideLoading();
-  }
 };
 
-const showCheckInCode = (appointmentNo) => {
-    uni.showModal({
-        title: '练车签到码',
-        content: `您的核销码：${appointmentNo.substring(appointmentNo.length - 6)}\n请在上车前向教练出示。`,
-        showCancel: false,
-        confirmText: '我知道了'
-    });
-};
+// const showCheckInCode = (appointmentNo) => {
+//     uni.showModal({
+//         title: '练车签到码',
+//         content: `您的核销码：${appointmentNo.substring(appointmentNo.length - 6)}\n请在上车前向教练出示。`,
+//         showCancel: false,
+//         confirmText: '我知道了'
+//     });
+// };
 
 const goToReview = (id) => {
     uni.showToast({ title: '前往评价页...', icon: 'none' });
@@ -556,5 +624,136 @@ const rebookCoach = (coachId) => {
     font-size: 24rpx;
     color: #ccc;
     padding: 20rpx 0;
+}
+
+/* --- 核销码弹窗样式 --- */
+.checkin-modal-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.checkin-modal-content {
+    width: 600rpx;
+    background-color: #fff;
+    border-radius: 24rpx;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 30rpx 40rpx;
+        border-bottom: 2rpx solid #f0f0f0;
+
+        .title {
+            font-size: 34rpx;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 40rpx;
+            color: #999;
+            padding: 10rpx;
+            margin: -10rpx;
+        }
+    }
+
+    .modal-body {
+        padding: 50rpx 40rpx;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .tips {
+            font-size: 28rpx;
+            color: #666;
+            margin-bottom: 40rpx;
+        }
+
+        .qrcode-box {
+            width: 360rpx;
+            height: 360rpx;
+            padding: 20rpx;
+            background-color: #f9f9f9;
+            border-radius: 16rpx;
+            border: 2rpx solid #eee;
+            margin-bottom: 40rpx;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            .mock-qrcode {
+                width: 100%;
+                height: 100%;
+                opacity: 0.8;
+            }
+        }
+
+        .code-text-box {
+            text-align: center;
+
+            .label {
+                font-size: 24rpx;
+                color: #999;
+                display: block;
+                margin-bottom: 10rpx;
+            }
+
+            .code-number {
+                font-size: 56rpx;
+                font-weight: bold;
+                color: #007aff;
+                letter-spacing: 8rpx;
+            }
+        }
+    }
+
+    .modal-footer {
+        background-color: #fff8e6;
+        padding: 24rpx 30rpx;
+        text-align: center;
+
+        .warning-text {
+            font-size: 22rpx;
+            color: #ff9800;
+            line-height: 1.5;
+        }
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(40rpx);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 </style>
