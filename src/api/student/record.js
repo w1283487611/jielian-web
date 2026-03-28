@@ -17,3 +17,11 @@ export function cancelAppointmentOrder(data) {
     data: data
   });
 }
+
+// 删除历史练车记录 (软删除)
+export function deleteAppointmentRecord(id) {
+  return request({
+    url: `/student/record/${id}`,
+    method: 'delete'
+  });
+}

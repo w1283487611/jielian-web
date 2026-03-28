@@ -55,11 +55,13 @@
                     </block>
 
                     <block v-else-if="record.status === 3">
+                        <button class="btn plain-btn" @click="deleteRecord(record.id)">删除记录</button>
                         <button class="btn plain-btn" v-if="record.isReviewed">已评价</button>
                         <button class="btn warning-btn" v-else @click="goToReview(record.id)">评价教练</button>
                     </block>
 
                     <block v-else-if="record.status === 4 || record.status === 6">
+                        <button class="btn plain-btn" @click="deleteRecord(record.id)">删除记录</button>
                         <button class="btn plain-btn" @click="rebookCoach(record.coachId)">重新预约</button>
                     </block>
                 </view>
@@ -79,7 +81,7 @@
 import { ref, reactive, computed } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { handleAvatar } from '@/utils/common';
-import { getRecordList, cancelAppointmentOrder, } from '@/api/student/record';
+import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord,  } from '@/api/student/record';
 
 // --- Tab 选项配置 ---
 const tabOptions = [
@@ -87,7 +89,8 @@ const tabOptions = [
     { label: '待确认', value: 0 },
     { label: '待练车', value: 1 }, // 后端已处理：传1会自动查出 1(已确认)和2(进行中)
     { label: '已完成', value: 3 },
-    { label: '已取消', value: 4 }
+    { label: '已取消', value: 4 },
+    { label: '已过期', value: 6 },
 ];
 const currentTab = ref('all');
 
@@ -140,6 +143,36 @@ const fetchRecords = async (isRefresh = true) => {
         loadStatus.value = 'more';
         if (isRefresh) uni.stopPullDownRefresh();
     }
+};
+
+// 删除记录
+const deleteRecord = (id) => {
+  uni.showModal({
+    title: '删除记录',
+    content: '确认删除这条练车记录吗？删除后将无法查看。',
+    confirmColor: '#ff3b30',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          uni.showLoading({ title: '删除中...', mask: true });
+          const response = await deleteAppointmentRecord(id);
+          
+          if (response.code === 200) {
+            uni.showToast({ title: '已删除', icon: 'success' });
+            // 删除成功后，无缝刷新列表
+            fetchRecords(true);
+          } else {
+            uni.showToast({ title: response.msg || '删除失败', icon: 'none' });
+          }
+        } catch (error) {
+          console.error('删除订单异常:', error);
+          uni.showToast({ title: '网络开小差了，请重试', icon: 'none' });
+        } finally {
+          uni.hideLoading();
+        }
+      }
+    }
+  });
 };
 
 // --- 生命周期钩子 ---
