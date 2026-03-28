@@ -29,7 +29,7 @@
                         <view class="info-row">
                             <text class="iconfont icon-book"></text>
                             <text class="text">{{ record.subjectName }} <text v-if="record.itemName">- {{
-                                    record.itemName }}</text></text>
+                                record.itemName }}</text></text>
                         </view>
                         <view class="info-row">
                             <text class="iconfont icon-location"></text>
@@ -59,7 +59,7 @@
                         <button class="btn warning-btn" v-else @click="goToReview(record.id)">评价教练</button>
                     </block>
 
-                    <block v-else-if="record.status === 4">
+                    <block v-else-if="record.status === 4 || record.status === 6">
                         <button class="btn plain-btn" @click="rebookCoach(record.coachId)">重新预约</button>
                     </block>
                 </view>
@@ -79,86 +79,86 @@
 import { ref, reactive, computed } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { handleAvatar } from '@/utils/common';
-import { getRecordList } from '@/api/student/record';
+import { getRecordList, cancelAppointmentOrder, } from '@/api/student/record';
 
 // --- Tab 选项配置 ---
 const tabOptions = [
-  { label: '全部', value: 'all' },
-  { label: '待确认', value: 0 },
-  { label: '待练车', value: 1 }, // 后端已处理：传1会自动查出 1(已确认)和2(进行中)
-  { label: '已完成', value: 3 },
-  { label: '已取消', value: 4 }
+    { label: '全部', value: 'all' },
+    { label: '待确认', value: 0 },
+    { label: '待练车', value: 1 }, // 后端已处理：传1会自动查出 1(已确认)和2(进行中)
+    { label: '已完成', value: 3 },
+    { label: '已取消', value: 4 }
 ];
 const currentTab = ref('all');
 
 // --- 列表与分页状态 ---
 const recordList = ref([]);
 const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
-  status: null // null 代表全部
+    pageNum: 1,
+    pageSize: 10,
+    status: null // null 代表全部
 });
 const total = ref(0);
 const loadStatus = ref('more'); // 'more'-还有数据, 'loading'-加载中, 'noMore'-没有更多了
 
 // --- 核心网络请求逻辑 ---
 const fetchRecords = async (isRefresh = true) => {
-  if (isRefresh) {
-    queryParams.pageNum = 1;
-    loadStatus.value = 'loading';
-  } else {
-    if (loadStatus.value === 'noMore') return;
-    queryParams.pageNum++;
-    loadStatus.value = 'loading';
-  }
-
-  try {
-    // 映射 Tab 状态给后端
-    queryParams.status = currentTab.value === 'all' ? null : currentTab.value;
-    
-    const res = await getRecordList(queryParams);
-    
-    if (res.code === 200) {
-      const rows = res.rows || [];
-      total.value = res.total || 0;
-      
-      if (isRefresh) {
-        recordList.value = rows;
-        uni.stopPullDownRefresh(); // 停止下拉动画
-      } else {
-        recordList.value = [...recordList.value, ...rows]; // 追加数据
-      }
-      
-      // 判断是否还有下一页
-      loadStatus.value = recordList.value.length >= total.value ? 'noMore' : 'more';
+    if (isRefresh) {
+        queryParams.pageNum = 1;
+        loadStatus.value = 'loading';
     } else {
-      uni.showToast({ title: res.msg || '获取记录失败', icon: 'none' });
-      loadStatus.value = 'more';
+        if (loadStatus.value === 'noMore') return;
+        queryParams.pageNum++;
+        loadStatus.value = 'loading';
     }
-  } catch (error) {
-    console.error('获取练车记录异常:', error);
-    loadStatus.value = 'more';
-    if (isRefresh) uni.stopPullDownRefresh();
-  }
+
+    try {
+        // 映射 Tab 状态给后端
+        queryParams.status = currentTab.value === 'all' ? null : currentTab.value;
+
+        const res = await getRecordList(queryParams);
+
+        if (res.code === 200) {
+            const rows = res.rows || [];
+            total.value = res.total || 0;
+
+            if (isRefresh) {
+                recordList.value = rows;
+                uni.stopPullDownRefresh(); // 停止下拉动画
+            } else {
+                recordList.value = [...recordList.value, ...rows]; // 追加数据
+            }
+
+            // 判断是否还有下一页
+            loadStatus.value = recordList.value.length >= total.value ? 'noMore' : 'more';
+        } else {
+            uni.showToast({ title: res.msg || '获取记录失败', icon: 'none' });
+            loadStatus.value = 'more';
+        }
+    } catch (error) {
+        console.error('获取练车记录异常:', error);
+        loadStatus.value = 'more';
+        if (isRefresh) uni.stopPullDownRefresh();
+    }
 };
 
 // --- 生命周期钩子 ---
 
 // 每次进入页面时刷新，保证订单状态(如刚评价完、刚约完)是最新的
 onShow(() => {
-  fetchRecords(true);
+    fetchRecords(true);
 });
 
 // 用户下拉刷新
 onPullDownRefresh(() => {
-  fetchRecords(true);
+    fetchRecords(true);
 });
 
 // 用户上拉触底加载下一页
 onReachBottom(() => {
-  if (loadStatus.value === 'more') {
-    fetchRecords(false);
-  }
+    if (loadStatus.value === 'more') {
+        fetchRecords(false);
+    }
 });
 
 // --- 辅助函数与前端计算 ---
@@ -167,59 +167,85 @@ onReachBottom(() => {
 const filteredRecords = computed(() => recordList.value);
 
 const getStatusText = (status) => {
-  const map = {
-    0: '待确认',
-    1: '待练车',
-    2: '进行中',
-    3: '已完成',
-    4: '已取消',
-    5: '申诉中'
-  };
-  return map[status] || '未知状态';
+    const map = {
+        0: '待确认',
+        1: '待练车',
+        2: '进行中',
+        3: '已完成',
+        4: '已取消',
+        5: '申诉中',
+        6: '已过期'
+    };
+    return map[status] || '未知状态';
 };
 
 // --- 交互事件 ---
 const switchTab = (value) => {
-  if (currentTab.value === value) return;
-  currentTab.value = value;
-  // 切换 Tab 时重置分页并刷新
-  fetchRecords(true);
+    if (currentTab.value === value) return;
+    currentTab.value = value;
+    // 切换 Tab 时重置分页并刷新
+    fetchRecords(true);
 };
 
 const cancelAppointment = (id) => {
-  uni.showModal({
-    title: '取消预约',
-    content: '距离练车时间不足2小时取消可能产生违约记录，确认取消吗？',
-    success: (res) => {
-      if (res.confirm) {
-        // TODO: 接通真实的取消订单 API (调用 /student/record/cancel)
-        uni.showToast({ title: '已取消 (待接入后端)', icon: 'none' });
-      }
-    }
-  });
+    uni.showModal({
+        title: '取消预约',
+        content: '距离练车时间不足 2 小时取消，将产生违约记录并可能影响后续预约，确认取消吗？',
+        confirmColor: '#ff3b30', // 把确认按钮变红，起到警示作用
+        success: async (res) => {
+            if (res.confirm) {
+                try {
+
+                    // 弹窗防抖
+                    uni.showLoading({ title: '正在取消...', mask: true });
+
+                    // 发起真实取消请求
+                    const response = await cancelAppointmentOrder({
+                        appointmentId: id,
+                        cancelReason: '学员端主动取消' // 也可以后续做个弹窗让学员选原因，这里先给默认值
+                    });
+
+                    if (response.code === 200) {
+                        uni.showToast({ title: '订单已取消', icon: 'success' });
+                        // 取消成功后，极度丝滑的体验：直接重新拉取当前 Tab 的列表数据
+                        // 这样被取消的订单会立刻变灰，或者从“待练车”列表里消失！
+                        fetchRecords(true);
+                    } else {
+                        // 拦截后端抛出的 RuntimeException (如：练车时间已过，无法取消)
+                        uni.showToast({ title: response.msg || '取消失败', icon: 'none' });
+                    }
+                } catch (error) {
+                    console.error('取消订单异常:', error);
+                    uni.showToast({ title: '网络开小差了，请重试', icon: 'none' });
+                } finally {
+                    uni.hideLoading();
+                }
+            }
+        }
+    });
 };
 
 const remindCoach = () => {
-  // TODO: 发送模板消息给教练
-  uni.showToast({ title: '已向教练发送提醒催单', icon: 'success' });
+    // TODO: 发送模板消息给教练
+    uni.showToast({ title: '已向教练发送提醒催单', icon: 'success' });
 };
 
 const showCheckInCode = (appointmentNo) => {
-  uni.showModal({
-    title: '练车签到码',
-    content: `您的核销码：${appointmentNo.substring(appointmentNo.length - 6)}\n请在上车前向教练出示。`,
-    showCancel: false,
-    confirmText: '我知道了'
-  });
+    uni.showModal({
+        title: '练车签到码',
+        content: `您的核销码：${appointmentNo.substring(appointmentNo.length - 6)}\n请在上车前向教练出示。`,
+        showCancel: false,
+        confirmText: '我知道了'
+    });
 };
 
 const goToReview = (id) => {
-  uni.showToast({ title: '前往评价页...', icon: 'none' });
-  // uni.navigateTo({ url: `/pages/student/review/review?appointmentId=${id}` });
+    uni.showToast({ title: '前往评价页...', icon: 'none' });
+    // uni.navigateTo({ url: `/pages/student/review/review?appointmentId=${id}` });
 };
 
 const rebookCoach = (coachId) => {
-  uni.navigateTo({ url: `/pages/student/appoint-detail/appoint-detail?coachId=${coachId}&date=${new Date().toISOString().split('T')[0]}` });
+    uni.navigateTo({ url: `/pages/student/appoint-detail/appoint-detail?coachId=${coachId}&date=${new Date().toISOString().split('T')[0]}` });
 };
 </script>
 
@@ -313,36 +339,41 @@ const rebookCoach = (coachId) => {
                 font-weight: bold;
 
                 /* 动态颜色映射 */
+                /* 待确认 - 橙色 */
                 &.status-0 {
                     color: #ff9800;
                 }
 
-                /* 待确认 - 橙色 */
+                /* 待练车 - 蓝色 */
                 &.status-1 {
                     color: #007aff;
                 }
 
-                /* 待练车 - 蓝色 */
+                /* 进行中 - 绿色 */
                 &.status-2 {
                     color: #07c160;
                 }
 
-                /* 进行中 - 绿色 */
+                /* 已完成 - 黑色 */
                 &.status-3 {
                     color: #333;
                 }
 
-                /* 已完成 - 黑色 */
+                /* 已取消 - 灰色 */
                 &.status-4 {
                     color: #999;
                 }
 
-                /* 已取消 - 灰色 */
+                /* 申诉中 - 红色 */
                 &.status-5 {
                     color: #f56c6c;
                 }
 
-                /* 申诉中 - 红色 */
+                /* 已过期 - 浅冷灰色 */
+                &.status-6 {
+                    color: #c0c4cc;
+                }
+
             }
         }
 

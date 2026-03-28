@@ -9,5 +9,11 @@ export function getRecordList(query) {
   });
 }
 
-// TODO: 这里还可以预留取消预约等接口
-// export function cancelAppointment(id) { ... }
+// 学员取消预约单 (含违约判定)
+export function cancelAppointmentOrder(data) {
+  return request({
+    url: '/student/record/cancel',
+    method: 'post',
+    data: data
+  });
+}
