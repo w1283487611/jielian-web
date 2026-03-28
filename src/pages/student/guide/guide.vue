@@ -170,8 +170,8 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { onLoad, onShow, onReady } from '@dcloudio/uni-app';
-import SchoolFilter from '@/components/school-filter/school-filter.vue';
-import CoachFilter from '@/components/coach-filter/coach-filter.vue';
+import SchoolFilter from '@/components/business/school-filter/school-filter.vue';
+import CoachFilter from '@/components/business/coach-filter/coach-filter.vue';
 
 // 引入后端 API 请求方法
 import { getLicenseList } from '@/api/client/license';

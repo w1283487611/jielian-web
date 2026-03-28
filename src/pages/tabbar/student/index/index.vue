@@ -4,7 +4,7 @@
       <view class="greeting-box">
         <text class="greeting-text">{{ greeting }}，{{ studentInfo.name || '学员' }}</text>
         <text class="sub-text" v-if="studentInfo.schoolName">当前绑定：{{ studentInfo.schoolName }}</text>
-        <text class="sub-text warn-text" v-else @click="goToGuide">您还未绑定驾校，去绑定 ></text>
+        <text class="sub-text warn-text" v-else @click="goToGuide">{{"您还未绑定驾校，去绑定 >"}}</text>
       </view>
       <view class="avatar-box">
         <image class="avatar" :src="handleAvatar(studentInfo.avatar)" mode="aspectFill"></image>
@@ -55,15 +55,6 @@
         </view>
         <button class="book-btn" @click="quickBook">立即预约</button>
 
-              <!-- <view class="grid-menu">
-      <view class="grid-item" v-for="(menu, index) in menuList" :key="index" @click="handleMenuClick(menu.path)">
-        <view class="icon-wrapper" :style="{ backgroundColor: menu.bgColor }">
-          <text class="iconfont" :class="menu.icon" :style="{ color: menu.iconColor }"></text>
-        </view>
-        <text class="menu-name">{{ menu.name }}</text>
-      </view>
-    </view> -->
-
       </view>
 
     </view>
@@ -80,12 +71,15 @@
     <view class="appointment-section">
       <view class="section-header">
         <text class="title">近期行程</text>
-        <text class="more" v-if="upcomingAppointment" @click="goToRecords">全部记录 ></text>
+        <!-- 直接使用 '>' 会被转义成'&gt;',特改为 '{{"全部记录 >"}}'-->
+        <text class="more" v-if="upcomingAppointment" @click="goToRecords">{{ "全部记录 >" }}</text>
       </view>
-      
+
       <view class="appointment-card has-data" v-if="upcomingAppointment">
         <view class="apt-header">
-          <text class="apt-status pending">待签到</text>
+          <text class="apt-status" :class="upcomingAppointment.status === 0 ? 'pending' : 'confirmed'">
+            {{ upcomingAppointment.status === 0 ? '待确认' : '待练车' }}
+          </text>
           <text class="apt-date">{{ upcomingAppointment.date }} {{ upcomingAppointment.time }}</text>
         </view>
         <view class="apt-body">
@@ -99,19 +93,17 @@
           </view>
         </view>
         <view class="apt-footer">
-          <button class="btn plain-btn">取消预约</button>
-          <button class="btn primary-btn">出示签到码</button>
+          <button class="btn plain-btn" @click="cancelAppointment(upcomingAppointment.appointmentId)">取消预约</button>
+          <button class="btn primary-btn" @click="showCheckInCode(upcomingAppointment.appointmentNo)">出示签到码</button>
         </view>
       </view>
 
       <view class="appointment-card empty-state" v-else>
         <!-- <image class="empty-img" src="/static/assets/images/empty-calendar.png" mode="aspectFit"></image> -->
         <text class="empty-tip">近期暂无练车安排</text>
-        <button class="book-btn" @click="goToBook">去看看排班</button>
+        <button class="book-btn" @click="goToBook">去添加预约</button>
       </view>
     </view>
-
-
 
     <view class="notice-bar" v-if="notices && notices.length > 0">
       <view class="notice-icon">
@@ -124,9 +116,10 @@
         </swiper-item>
       </swiper>
     </view>
-    
+
+    <CheckinModal v-model:visible="showCheckInModal" :appointment-no="currentAppointmentNo" />
+
     <view class="tabbar-spacer"></view>
-    
     <Tabbar />
   </view>
 </template>
@@ -135,8 +128,14 @@
 import { ref, reactive, computed } from 'vue';
 import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'; // 引入小程序生命周期
 import Tabbar from "@/components/tabbar/index.vue";
-import { getStudentHomeData } from '@/api/student/home'; // 引入我们刚才写的 API
+import CheckinModal from '@/components/business/CheckinModal/CheckinModal.vue';
+import { getStudentHomeData } from '@/api/student/home';
+import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord, remindCoachOrder, } from '@/api/student/record';
+
 import { handleAvatar } from '@/utils/common'; // 引入头像处理工具
+import useTabbarStore from '@/store/modules/tabbar';
+
+const tabbarStore = useTabbarStore();
 
 // --- 计算问候语 ---
 const greeting = computed(() => {
@@ -152,7 +151,7 @@ const greeting = computed(() => {
 
 // 学员基础信息 (赋空初值)
 const studentInfo = reactive({
-  name: '', avatar: '', schoolName: '', licenseCode: '', 
+  name: '', avatar: '', schoolName: '', licenseCode: '',
   currentSubject: '', totalHours: 0, totalAppoints: 0, passRate: 0
 });
 
@@ -163,11 +162,15 @@ const notices = ref([]);
 
 // 金刚区固定配置
 const menuList = ref([
-  { name: '常规预约', icon: 'icon-calendar', bgColor: '#e6f2ff', iconColor: '#007aff', path: '/pages/student/book/book' },
-  { name: '练车记录', icon: 'icon-time', bgColor: '#fff0e6', iconColor: '#ff7a00', path: '/pages/student/record/record' },
-  { name: '我的教练', icon: 'icon-user-tie', bgColor: '#e6ffec', iconColor: '#00b33c', path: '/pages/student/my-coach/my-coach' },
-  { name: '我的驾校', icon: 'icon-building', bgColor: '#f0e6ff', iconColor: '#7a00ff', path: '/pages/student/school-detail/school-detail' } 
+  { name: '常规预约', icon: 'icon-calendar', bgColor: '#e6f2ff', iconColor: '#007aff', path: '/pages/tabbar/student/appoint/appoint', type: 'tabbar' },
+  { name: '练车记录', icon: 'icon-time', bgColor: '#fff0e6', iconColor: '#ff7a00', path: '/pages/student/record/record', type: 'normal' },
+  { name: '我的教练', icon: 'icon-user-tie', bgColor: '#e6ffec', iconColor: '#00b33c', path: '/pages/student/my-coach/my-coach', type: 'normal' },
+  { name: '我的驾校', icon: 'icon-building', bgColor: '#f0e6ff', iconColor: '#7a00ff', path: '/pages/student/school-detail/school-detail', type: 'normal' }
 ]);
+
+// --- 弹窗控制状态 ---
+const showCheckInModal = ref(false);
+const currentAppointmentNo = ref('');
 
 // --- 核心拉取逻辑 ---
 const fetchHomeData = async () => {
@@ -204,22 +207,65 @@ onPullDownRefresh(() => {
 
 // --- 交互事件 ---
 const goToGuide = () => { uni.navigateTo({ url: '/pages/student/guide/guide' }); };
-const goToBook = () => { uni.navigateTo({ url: '/pages/student/book/book' }); };
+const goToBook = () => {
+  // uni.s({ url: '/pages/tabbar/student/appoint/appoint' }); 
+  tabbarStore.switchTab(1); // 索引为1的tabbar是预约tabbar页面
+};
 const quickBook = () => { uni.showToast({ title: '拉起快速预约...', icon: 'none' }); };
 const goToRecords = () => { uni.navigateTo({ url: '/pages/student/record/record' }); };
+
 const handleMenuClick = (path) => {
   if (path) {
-    uni.navigateTo({ url: path });
+    if (path.includes('/pages/tabbar/student/appoint/appoint')) {
+      tabbarStore.switchTab(1); // 索引为1的tabbar是预约tabbar页面
+    } else uni.navigateTo({ url: path });
   } else {
     uni.showToast({ title: '功能开发中', icon: 'none' });
   }
 };
+
+// 取消预约
+const cancelAppointment = (id) => {
+  if (!id) return;
+  uni.showModal({
+    title: '取消预约',
+    content: '距离练车时间不足 2 小时取消，将产生违约记录并可能影响后续预约，确认取消吗？',
+    confirmColor: '#ff3b30',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          uni.showLoading({ title: '正在取消...', mask: true });
+          const response = await cancelAppointmentOrder({
+            appointmentId: id,
+            cancelReason: '学员自主取消'
+          });
+
+          if (response.code === 200) {
+            uni.showToast({ title: '订单已取消', icon: 'success' });
+            // 取消成功后，重新拉取主页数据，近期行程卡片会自动消失或更新！
+            fetchHomeData();
+          } else {
+            uni.showToast({ title: response.msg || '取消失败', icon: 'none' });
+          }
+        } catch (error) {
+          console.error(error)
+          uni.showToast({ title: '网络异常', icon: 'none' });
+        } finally {
+          uni.hideLoading();
+        }
+      }
+    }
+  });
+};
+
+// 点击按钮时触发
+const showCheckInCode = (appointmentNo) => {
+  if (!appointmentNo) return;
+  currentAppointmentNo.value = appointmentNo;
+  showCheckInModal.value = true;
+};
 </script>
 
-<style lang="scss" scoped>
-/* 此处保留与上一步完全相同的 CSS 样式，不需要修改 */
-/* ... (请直接复用上一版提供的完整 CSS) ... */
-</style>
 
 <style lang="scss" scoped>
 .home-container {
@@ -238,35 +284,35 @@ const handleMenuClick = (path) => {
   padding-top: 20rpx;
 
   .greeting-box {
-      display: flex;
-      flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-      .greeting-text {
-          font-size: 44rpx;
-          font-weight: bold;
-          color: #333;
-          margin-bottom: 10rpx;
-      }
+    .greeting-text {
+      font-size: 44rpx;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10rpx;
+    }
 
-      .sub-text {
-          font-size: 26rpx;
-          color: #666;
-      }
+    .sub-text {
+      font-size: 26rpx;
+      color: #666;
+    }
 
-      .warn-text {
-          color: #ff9800;
-          font-weight: bold;
-      }
+    .warn-text {
+      color: #ff9800;
+      font-weight: bold;
+    }
   }
 
   .avatar-box {
-      .avatar {
-          width: 100rpx;
-          height: 100rpx;
-          border-radius: 50%;
-          border: 4rpx solid #fff;
-          box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-      }
+    .avatar {
+      width: 100rpx;
+      height: 100rpx;
+      border-radius: 50%;
+      border: 4rpx solid #fff;
+      box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+    }
   }
 }
 
@@ -280,74 +326,74 @@ const handleMenuClick = (path) => {
   box-shadow: 0 12rpx 24rpx rgba(0, 122, 255, 0.2);
 
   .card-top {
-      display: flex;
-      align-items: center;
-      margin-bottom: 30rpx;
+    display: flex;
+    align-items: center;
+    margin-bottom: 30rpx;
 
-      .license-tag {
-          background-color: rgba(255, 255, 255, 0.2);
-          padding: 4rpx 16rpx;
-          border-radius: 8rpx;
-          font-size: 24rpx;
-          font-weight: bold;
-          margin-right: 16rpx;
-      }
+    .license-tag {
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 4rpx 16rpx;
+      border-radius: 8rpx;
+      font-size: 24rpx;
+      font-weight: bold;
+      margin-right: 16rpx;
+    }
 
-      .subject-text {
-          font-size: 32rpx;
-          font-weight: bold;
-      }
+    .subject-text {
+      font-size: 32rpx;
+      font-weight: bold;
+    }
   }
 
   .card-middle {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30rpx;
+
+    .stat-item {
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 30rpx;
+      flex-direction: column;
 
-      .stat-item {
-          display: flex;
-          flex-direction: column;
+      .num {
+        font-size: 40rpx;
+        font-weight: bold;
+        margin-bottom: 4rpx;
 
-          .num {
-              font-size: 40rpx;
-              font-weight: bold;
-              margin-bottom: 4rpx;
-
-              .unit {
-                  font-size: 24rpx;
-                  font-weight: normal;
-                  margin-left: 4rpx;
-              }
-          }
-
-          .label {
-              font-size: 24rpx;
-              opacity: 0.8;
-          }
+        .unit {
+          font-size: 24rpx;
+          font-weight: normal;
+          margin-left: 4rpx;
+        }
       }
+
+      .label {
+        font-size: 24rpx;
+        opacity: 0.8;
+      }
+    }
   }
 
   .card-bottom {
-      .progress-bar {
-          width: 100%;
-          height: 12rpx;
-          background-color: rgba(255, 255, 255, 0.3);
-          border-radius: 6rpx;
-          overflow: hidden;
-          margin-bottom: 12rpx;
-      }
+    .progress-bar {
+      width: 100%;
+      height: 12rpx;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 6rpx;
+      overflow: hidden;
+      margin-bottom: 12rpx;
+    }
 
-      .progress-inner {
-          height: 100%;
-          background-color: #fff;
-          border-radius: 6rpx;
-          transition: width 0.5s ease;
-      }
+    .progress-inner {
+      height: 100%;
+      background-color: #fff;
+      border-radius: 6rpx;
+      transition: width 0.5s ease;
+    }
 
-      .progress-tip {
-          font-size: 22rpx;
-          opacity: 0.9;
-      }
+    .progress-tip {
+      font-size: 22rpx;
+      opacity: 0.9;
+    }
   }
 }
 
@@ -359,14 +405,14 @@ const handleMenuClick = (path) => {
   margin-bottom: 24rpx;
 
   .title {
-      font-size: 34rpx;
-      font-weight: bold;
-      color: #333;
+    font-size: 34rpx;
+    font-weight: bold;
+    color: #333;
   }
 
   .more {
-      font-size: 26rpx;
-      color: #999;
+    font-size: 26rpx;
+    color: #999;
   }
 }
 
@@ -375,80 +421,80 @@ const handleMenuClick = (path) => {
   margin-bottom: 40rpx;
 
   .quick-book-card {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 20rpx;
+    padding: 30rpx;
+    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+
+    .coach-avatar {
+      width: 100rpx;
+      height: 100rpx;
+      border-radius: 50%;
+      background-color: #eee;
+      margin-right: 24rpx;
+    }
+
+    .coach-info {
+      flex: 1;
       display: flex;
-      align-items: center;
-      background-color: #fff;
-      border-radius: 20rpx;
-      padding: 30rpx;
-      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+      flex-direction: column;
+      justify-content: center;
 
-      .coach-avatar {
-          width: 100rpx;
-          height: 100rpx;
-          border-radius: 50%;
-          background-color: #eee;
-          margin-right: 24rpx;
+      .name-line {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12rpx;
+
+        .coach-name {
+          font-size: 32rpx;
+          font-weight: bold;
+          color: #333;
+          margin-right: 12rpx;
+        }
+
+        .coach-tag {
+          font-size: 20rpx;
+          color: #3b82f6;
+          background-color: #eff6ff;
+          padding: 4rpx 12rpx;
+          border-radius: 6rpx;
+        }
       }
 
-      .coach-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
+      .quota-line {
+        font-size: 26rpx;
+        color: #666;
 
-          .name-line {
-              display: flex;
-              align-items: center;
-              margin-bottom: 12rpx;
+        .quota-num {
+          color: #ff3b30;
+          font-weight: bold;
+          margin-left: 8rpx;
+        }
+      }
+    }
 
-              .coach-name {
-                  font-size: 32rpx;
-                  font-weight: bold;
-                  color: #333;
-                  margin-right: 12rpx;
-              }
+    .book-btn {
+      margin: 0;
+      width: 180rpx;
+      height: 68rpx;
+      line-height: 68rpx;
+      background-color: #2f73f6;
+      color: #fff;
+      font-size: 28rpx;
+      border-radius: 34rpx;
+      padding: 0;
+      text-align: center;
 
-              .coach-tag {
-                  font-size: 20rpx;
-                  color: #3b82f6;
-                  background-color: #eff6ff;
-                  padding: 4rpx 12rpx;
-                  border-radius: 6rpx;
-              }
-          }
-
-          .quota-line {
-              font-size: 26rpx;
-              color: #666;
-
-              .quota-num {
-                  color: #ff3b30;
-                  font-weight: bold;
-                  margin-left: 8rpx;
-              }
-          }
+      &::after {
+        border: none;
       }
 
-      .book-btn {
-          margin: 0;
-          width: 180rpx;
-          height: 68rpx;
-          line-height: 68rpx;
-          background-color: #2f73f6;
-          color: #fff;
-          font-size: 28rpx;
-          border-radius: 34rpx;
-          padding: 0;
-          text-align: center;
-
-          &::after {
-              border: none;
-          }
-
-          &:active {
-              opacity: 0.8;
-          }
+      &:active {
+        opacity: 0.8;
       }
+    }
   }
 }
 
@@ -457,123 +503,128 @@ const handleMenuClick = (path) => {
   margin-bottom: 40rpx;
 
   .appointment-card {
-      background-color: #fff;
-      border-radius: 20rpx;
-      padding: 30rpx;
-      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+    background-color: #fff;
+    border-radius: 20rpx;
+    padding: 30rpx;
+    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
 
-      &.has-data {
-          .apt-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              border-bottom: 2rpx dashed #eee;
-              padding-bottom: 20rpx;
-              margin-bottom: 20rpx;
+    &.has-data {
+      .apt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2rpx dashed #eee;
+        padding-bottom: 20rpx;
+        margin-bottom: 20rpx;
 
-              .apt-status {
-                  font-size: 24rpx;
-                  padding: 4rpx 12rpx;
-                  border-radius: 6rpx;
+        .apt-status {
+          font-size: 24rpx;
+          padding: 4rpx 12rpx;
+          border-radius: 6rpx;
 
-                  &.pending {
-                      background-color: #fff3e0;
-                      color: #ff9800;
-                  }
-              }
-
-              .apt-date {
-                  font-size: 30rpx;
-                  font-weight: bold;
-                  color: #333;
-              }
+          &.pending {
+            background-color: #fff3e0;
+            color: #ff9800;
           }
 
-          .apt-body {
-              margin-bottom: 30rpx;
-
-              .info-row {
-                  display: flex;
-                  align-items: flex-start;
-                  margin-bottom: 16rpx;
-
-                  .iconfont {
-                      color: #999;
-                      font-size: 32rpx;
-                      margin-right: 16rpx;
-                      margin-top: 2rpx;
-                  }
-
-                  .text {
-                      flex: 1;
-                      font-size: 28rpx;
-                      color: #444;
-                      line-height: 1.5;
-                  }
-              }
+          &.confirmed {
+            background-color: #e6f2ff;
+            color: #007aff;
           }
+        }
 
-          .apt-footer {
-              display: flex;
-              justify-content: flex-end;
-              gap: 20rpx;
-
-              .btn {
-                  margin: 0;
-                  padding: 0 30rpx;
-                  height: 64rpx;
-                  line-height: 64rpx;
-                  font-size: 26rpx;
-                  border-radius: 32rpx;
-
-                  &::after {
-                      border: none;
-                  }
-              }
-
-              .plain-btn {
-                  background-color: #f5f7fa;
-                  color: #666;
-              }
-
-              .primary-btn {
-                  background-color: #007aff;
-                  color: #fff;
-              }
-          }
+        .apt-date {
+          font-size: 30rpx;
+          font-weight: bold;
+          color: #333;
+        }
       }
 
-      &.empty-state {
+      .apt-body {
+        margin-bottom: 30rpx;
+
+        .info-row {
           display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 50rpx 0;
+          align-items: flex-start;
+          margin-bottom: 16rpx;
 
-          .empty-img {
-              width: 200rpx;
-              height: 200rpx;
-              margin-bottom: 20rpx;
-              opacity: 0.8;
+          .iconfont {
+            color: #999;
+            font-size: 32rpx;
+            margin-right: 16rpx;
+            margin-top: 2rpx;
           }
 
-          .empty-tip {
-              font-size: 28rpx;
-              color: #999;
-              margin-bottom: 30rpx;
+          .text {
+            flex: 1;
+            font-size: 28rpx;
+            color: #444;
+            line-height: 1.5;
           }
-
-          .book-btn {
-              width: 60%;
-              height: 80rpx;
-              line-height: 80rpx;
-              border-radius: 40rpx;
-              background-color: #007aff;
-              color: #fff;
-              font-size: 30rpx;
-              font-weight: bold;
-              box-shadow: 0 8rpx 16rpx rgba(0, 122, 255, 0.3);
-          }
+        }
       }
+
+      .apt-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 20rpx;
+
+        .btn {
+          margin: 0;
+          padding: 0 30rpx;
+          height: 64rpx;
+          line-height: 64rpx;
+          font-size: 26rpx;
+          border-radius: 32rpx;
+
+          &::after {
+            border: none;
+          }
+        }
+
+        .plain-btn {
+          background-color: #f5f7fa;
+          color: #666;
+        }
+
+        .primary-btn {
+          background-color: #007aff;
+          color: #fff;
+        }
+      }
+    }
+
+    &.empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50rpx 0;
+
+      .empty-img {
+        width: 200rpx;
+        height: 200rpx;
+        margin-bottom: 20rpx;
+        opacity: 0.8;
+      }
+
+      .empty-tip {
+        font-size: 28rpx;
+        color: #999;
+        margin-bottom: 30rpx;
+      }
+
+      .book-btn {
+        width: 60%;
+        height: 80rpx;
+        line-height: 80rpx;
+        border-radius: 40rpx;
+        background-color: #007aff;
+        color: #fff;
+        font-size: 30rpx;
+        font-weight: bold;
+        box-shadow: 0 8rpx 16rpx rgba(0, 122, 255, 0.3);
+      }
+    }
   }
 }
 
@@ -588,30 +639,30 @@ const handleMenuClick = (path) => {
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
 
   .grid-item {
-      width: 25%;
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10rpx;
+
+    .icon-wrapper {
+      width: 88rpx;
+      height: 88rpx;
+      border-radius: 30%;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      margin-bottom: 10rpx;
+      margin-bottom: 16rpx;
 
-      .icon-wrapper {
-          width: 88rpx;
-          height: 88rpx;
-          border-radius: 30%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          margin-bottom: 16rpx;
-
-          .iconfont {
-              font-size: 44rpx;
-          }
+      .iconfont {
+        font-size: 44rpx;
       }
+    }
 
-      .menu-name {
-          font-size: 26rpx;
-          color: #333;
-      }
+    .menu-name {
+      font-size: 26rpx;
+      color: #333;
+    }
   }
 }
 
@@ -625,35 +676,35 @@ const handleMenuClick = (path) => {
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
 
   .notice-icon {
-      display: flex;
-      align-items: center;
-      margin-right: 20rpx;
-      border-right: 2rpx solid #eee;
-      padding-right: 20rpx;
+    display: flex;
+    align-items: center;
+    margin-right: 20rpx;
+    border-right: 2rpx solid #eee;
+    padding-right: 20rpx;
 
-      .icon-notification {
-          color: #f56c6c;
-          font-size: 32rpx;
-          margin-right: 8rpx;
-      }
+    .icon-notification {
+      color: #f56c6c;
+      font-size: 32rpx;
+      margin-right: 8rpx;
+    }
 
-      .notice-label {
-          font-size: 28rpx;
-          font-weight: bold;
-          color: #333;
-          font-style: italic;
-      }
+    .notice-label {
+      font-size: 28rpx;
+      font-weight: bold;
+      color: #333;
+      font-style: italic;
+    }
   }
 
   .notice-swiper {
-      flex: 1;
-      height: 40rpx;
-      line-height: 40rpx;
+    flex: 1;
+    height: 40rpx;
+    line-height: 40rpx;
 
-      .notice-content {
-          font-size: 26rpx;
-          color: #666;
-      }
+    .notice-content {
+      font-size: 26rpx;
+      color: #666;
+    }
   }
 }
 

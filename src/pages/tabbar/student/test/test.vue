@@ -72,13 +72,15 @@
 
             <view class="bottom-tips" v-if="filteredRecords.length > 0">已经到底啦~</view>
         </view>
+        <Tabbar />
     </view>
+    
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { handleAvatar } from '@/utils/common';
-
+import Tabbar from "@/components/tabbar/index.vue";
 // --- Tab 选项配置 ---
 const tabOptions = [
     { label: '全部', value: 'all' },

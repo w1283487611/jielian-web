@@ -33,3 +33,12 @@ export function remindCoachOrder(id) {
     method: 'post'
   });
 }
+
+// 学员提交评价
+export function submitAppointmentReview(data) {
+  return request({
+    url: '/student/record/review',
+    method: 'post',
+    data: data
+  });
+}

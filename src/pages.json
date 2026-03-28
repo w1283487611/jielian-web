@@ -203,6 +203,21 @@
 					}
 				},
 				{
+					"path": "review/review",
+					"style": {
+						"navigationBarTitleText": "预约评价",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
 					"path": "school-detail/school-detail",
 					"style": {
 						"navigationBarTitleText": "驾校详情",

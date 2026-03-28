@@ -57,7 +57,7 @@
                     <block v-else-if="record.status === 3">
                         <button class="btn plain-btn" @click="deleteRecord(record.id)">删除记录</button>
                         <button class="btn plain-btn" v-if="record.isReviewed">已评价</button>
-                        <button class="btn warning-btn" v-else @click="goToReview(record.id)">评价教练</button>
+                        <button class="btn warning-btn" v-else @click="goToReview(record.id)">练车评价</button>
                     </block>
 
                     <block v-else-if="record.status === 4 || record.status === 6">
@@ -75,42 +75,14 @@
             <view class="bottom-tips" v-if="filteredRecords.length > 0">已经到底啦~</view>
         </view>
 
-        <view class="checkin-modal-mask" v-if="showCheckInModal" @click="closeCheckInCode">
-            <view class="checkin-modal-content" @click.stop>
-                <view class="modal-header">
-                    <text class="title">练车签到码</text>
-                    <text class="iconfont icon-close close-btn" @click="closeCheckInCode"></text>
-                </view>
-
-                <view class="modal-body">
-                    <text class="tips">请在上车前向教练出示此码</text>
-
-                    <!-- <view class="qrcode-box">
-                        <image class="mock-qrcode" src="/static/assets/images/mock-qrcode.png" mode="aspectFit"></image>
-                    </view> -->
-                    <view class="qrcode-box">
-                        <canvas id="qrcode-canvas" canvas-id="qrcode-canvas"
-                            style="width: 180px; height: 180px;"></canvas>
-                    </view>
-
-                    <view class="code-text-box">
-                        <text class="label">数字核销码</text>
-                        <text class="code-number">{{ currentCheckInCode }}</text>
-                    </view>
-                </view>
-
-                <view class="modal-footer">
-                    <text class="warning-text">注：扫码确认后即开始计算学时，请确保到达场地。</text>
-                </view>
-            </view>
-        </view>
+        <CheckinModal v-model:visible="showCheckInModal" :appointment-no="currentAppointmentNo" />
     </view>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
-import UQRCode from 'uqrcodejs';
+import CheckinModal from '@/components/business/CheckinModal/CheckinModal.vue';
 import { handleAvatar } from '@/utils/common';
 import { getRecordList, cancelAppointmentOrder, deleteAppointmentRecord, remindCoachOrder, } from '@/api/student/record';
 
@@ -138,7 +110,6 @@ const loadStatus = ref('more'); // 'more'-还有数据, 'loading'-加载中, 'no
 
 // --- 核销码弹窗状态 ---
 const showCheckInModal = ref(false);
-const currentCheckInCode = ref('');
 const currentAppointmentNo = ref('');
 
 // --- 核心网络请求逻辑 ---
@@ -212,35 +183,11 @@ const deleteRecord = (id) => {
     });
 };
 
-// 生成二维码的核心逻辑
-const generateQRCode = (text) => {
-  const qr = new UQRCode();
-  qr.data = text;
-  qr.size = 180; // 这里的数值必须与 template 中 canvas 的 px 大小保持一致
-  qr.useDynamicSize = false;
-  qr.make();
-  
-  // 获取 uni 的 canvas 上下文并绘制
-  const ctx = uni.createCanvasContext('qrcode-canvas');
-  qr.canvasContext = ctx;
-  qr.drawCanvas();
-};
-
 // 真实接轨：出示签到码 (呼出弹窗)
 const showCheckInCode = (appointmentNo) => {
-    currentAppointmentNo.value = appointmentNo;
-    // 提取订单号的后 6 位作为纯数字核销码（方便教练手机摄像头坏了时手动输入）
-    currentCheckInCode.value = appointmentNo.substring(appointmentNo.length - 6);
-
-    showCheckInModal.value = true;
-
-    // uQRCode 插件，调用生成二维码
-    generateQRCode(JSON.stringify({ type: 'checkin', no: appointmentNo }));
-};
-
-// 关闭核销码弹窗
-const closeCheckInCode = () => {
-    showCheckInModal.value = false;
+  if (!appointmentNo) return;
+  currentAppointmentNo.value = appointmentNo;
+  showCheckInModal.value = true; 
 };
 
 // --- 生命周期钩子 ---
@@ -364,7 +311,7 @@ const remindCoach = async (id) => {
 
 const goToReview = (id) => {
     uni.showToast({ title: '前往评价页...', icon: 'none' });
-    // uni.navigateTo({ url: `/pages/student/review/review?appointmentId=${id}` });
+    uni.navigateTo({ url: `/pages/student/review/review?appointmentId=${id}` });
 };
 
 const rebookCoach = (coachId) => {
