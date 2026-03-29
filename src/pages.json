@@ -29,6 +29,36 @@
 				"navigationBarTitleText": "角色选择"
 			}
 		},
+		{
+			"path": "pages/common/city-picker/city-picker",
+			"style": {
+				"navigationBarTitleText": "选择城市",
+				"navigationBarBackgroundColor": "#3875EA",
+				"navigationBarTextStyle": "white",
+				"app-plus": {
+					// #ifdef APP-PLUS
+					"titleNView": {
+						"type": "default"
+					}
+					// #endif
+				}
+			}
+		  },
+		  {
+			"path": "pages/common/location-picker/location-picker",
+			"style": {
+				"navigationBarTitleText": "选择地址",
+				"navigationBarBackgroundColor": "#3875EA",
+				"navigationBarTextStyle": "white",
+				"app-plus": {
+					// #ifdef APP-PLUS
+					"titleNView": {
+						"type": "default"
+					}
+					// #endif
+				}
+			}
+		  },
 		// 学员tabbar
 		{
 			"path": "pages/tabbar/student/index/index",
@@ -61,9 +91,9 @@
 			}
 		},
 		{
-			"path": "pages/tabbar/student/test/test",
+			"path": "pages/tabbar/student/enroll/enroll",
 			"style": {
-				"navigationBarTitleText": "我的",
+				"navigationBarTitleText": "报名",
 				"navigationBarBackgroundColor": "#3875EA",
 				"navigationBarTextStyle": "white",
 				"app-plus": {
@@ -242,6 +272,19 @@
 							}
 						}
 					}
+				},
+				{
+					"path": "coach-list/coach-list",
+					"style": {
+						"navigationBarTitleText": "找教练",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
+						"app-plus": {
+							"titleNView": {
+								"type": "default"
+							}
+						}
+					}
 				}
 			]
 		},
@@ -297,10 +340,10 @@
 				"selectedIconPath": "/static/assets/images/tabbar/appointHL.png"
 			},
 			{
-				"pagePath": "pages/tabbar/student/test/test",
-				"text": "学员",
-				"iconPath": "/static/assets/images/tabbar/appoint.png",
-				"selectedIconPath": "/static/assets/images/tabbar/appointHL.png"
+				"pagePath": "pages/tabbar/student/enroll/enroll",
+				"text": "报名",
+				"iconPath": "/static/assets/images/tabbar/huge.png",
+				"selectedIconPath": "/static/assets/images/tabbar/hugeHL.png"
 			},
 			{
 				"pagePath": "pages/tabbar/student/my/my",

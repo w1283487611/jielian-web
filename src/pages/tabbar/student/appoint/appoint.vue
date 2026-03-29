@@ -121,7 +121,7 @@
                 </view>
 
                 <view class="hall-top-bar">
-                    <text class="hall-title">找教练</text>
+                    <text class="hall-title">选教练</text>
                     <view class="manage-link" @click="goToMyCoaches">
                         管理我的所有教练 <text class="iconfont icon-right"></text>
                     </view>

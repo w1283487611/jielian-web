@@ -1,8 +1,6 @@
 <template>
   <view class="my-coach-container">
 
-
-
     <view class="global-warning-banner" v-if="!studentContext.schoolId">
       <view class="banner-left">
         <text class="iconfont icon-info-circle"></text>
@@ -10,8 +8,6 @@
       </view>
       <button class="bind-action-btn" @click="goToBindSchool">暂无驾校，现在绑定</button>
     </view>
-
-
 
     <view class="hall-tabs">
       <view class="tab-item" v-if="studentContext.schoolId" :class="{ 'active': currentTab === 'current' }"
@@ -23,103 +19,56 @@
         独立私教</view>
     </view>
 
-
-
     <view class="content-area">
-
-      <view class="explore-banner" @click="goToRecommend">
-      <view class="explore-left">
-        <view class="icon-bg">
-          <text class="iconfont icon-compass"></text>
-        </view>
-        <view class="text-group">
-          <text class="main-title">去教练推荐页预约</text>
-          <text class="sub-title">海量金牌教练，智能匹配您的学车需求</text>
-        </view>
-      </view>
-      <view class="explore-right">
-        <text class="go-text">去看看</text>
-        <text class="iconfont icon-right"></text>
-      </view>
-    </view>
 
       <block v-if="currentTab === 'current'">
         <view class="coach-list" v-if="currentCoaches.length > 0">
-          <view class="coach-card current-card" v-for="coach in currentCoaches" :key="coach.id"
-            @click="goToCoachDetail(coach.id)">
-            <image class="avatar" :src="handleAvatar(coach.avatar)" mode="aspectFill"></image>
-            <view class="info">
-              <view class="name-row">
-                <text class="name">{{ coach.name }}</text>
-                <text class="coach-tag" :class="coach.id === studentContext.mainCoachId ? 'primary' : 'warning'">
-                  {{ coach.id === studentContext.mainCoachId ? '主教练' : '临时教练' }}
-                </text>
-              </view>
-              <view class="stat-row">⭐ {{ coach.rating }} · 教龄 {{ coach.teachingYears }} 年</view>
-              <view class="practice-count">当前驾校为您分配的专属导师</view>
-            </view>
-            <button class="book-btn" @click.stop="quickBook(coach.id)">去约车</button>
-          </view>
         </view>
 
         <view class="empty-state-card" v-else>
-          <!-- <view class="empty-icon-wrap"><text class="iconfont icon-user-tie"></text></view> -->
+          <view class="empty-icon-wrap"><text class="iconfont icon-user-tie"></text></view>
           <text class="empty-text">您已加入驾校，但暂未分配专属教练</text>
           <button class="empty-btn" @click="goToBindCoach">暂无教练，现在绑定</button>
         </view>
       </block>
 
-
-
       <block v-if="currentTab === 'historySchool'">
         <view class="coach-list" v-if="historySchoolCoaches.length > 0">
-          <view class="coach-card" v-for="coach in historySchoolCoaches" :key="coach.id"
-            @click="goToCoachDetail(coach.id)">
-            <image class="avatar" :src="handleAvatar(coach.avatar)" mode="aspectFill"></image>
-            <view class="info">
-              <view class="name-row">
-                <text class="name">{{ coach.name }}</text>
-                <text class="coach-tag default">驾校带教</text>
-              </view>
-              <view class="stat-row">⭐ {{ coach.rating }} · 教龄 {{ coach.teachingYears }} 年</view>
-              <view class="practice-count">历史合作订单：<text class="num">{{ coach.practicedTimes }}</text> 次</view>
-            </view>
-            <button class="book-btn plain" @click.stop="quickBook(coach.id)">再约一次</button>
-          </view>
         </view>
 
         <view class="empty-state-card" v-else>
-          <!-- <view class="empty-icon-wrap"><text class="iconfont icon-file-empty"></text></view> -->
+          <view class="empty-icon-wrap"><text class="iconfont icon-file-empty"></text></view>
           <text class="empty-text">您暂无任何驾校订单的带教记录</text>
         </view>
       </block>
 
-
       <block v-if="currentTab === 'independent'">
         <view class="coach-list" v-if="historyPrivateCoaches.length > 0">
-          <view class="coach-card" v-for="coach in historyPrivateCoaches" :key="coach.id"
-            @click="goToCoachDetail(coach.id)">
-            <image class="avatar" :src="handleAvatar(coach.avatar)" mode="aspectFill"></image>
-            <view class="info">
-              <view class="name-row">
-                <text class="name">{{ coach.name }}</text>
-                <text class="coach-tag success">独立私教</text>
-              </view>
-              <view class="stat-row">⭐ {{ coach.rating }} · 课时费 ￥{{ coach.price || 150 }}/时起</view>
-              <view class="practice-count">历史合作订单：<text class="num">{{ coach.practicedTimes }}</text> 次</view>
-            </view>
-            <button class="book-btn plain" @click.stop="quickBook(coach.id)">再约一次</button>
-          </view>
         </view>
 
         <view class="empty-state-card" v-else>
-          <!-- <view class="empty-icon-wrap"><text class="iconfont icon-compass"></text></view> -->
+          <view class="empty-icon-wrap"><text class="iconfont icon-compass"></text></view>
           <text class="empty-text">您暂未预约过任何独立私教</text>
         </view>
       </block>
 
-
+      <view class="explore-banner" @click="goToRecommend">
+        <view class="explore-left">
+          <view class="icon-bg">
+            <text class="iconfont icon-compass"></text>
+          </view>
+          <view class="text-group">
+            <text class="main-title">去教练推荐页预约</text>
+            <text class="sub-title">海量金牌教练，智能匹配您的学车需求</text>
+          </view>
+        </view>
+        <view class="explore-right">
+          <text class="go-text">去看看</text>
+          <text class="iconfont icon-right"></text>
+        </view>
+      </view>
     </view>
+
   </view>
 </template>
 
@@ -157,7 +106,7 @@ const getTodayDateString = () => {
 const fetchMyCoaches = async () => {
   try {
     uni.showLoading({ title: '加载中...', mask: true });
-    // 调用后端接口
+    // 后端接口需按新逻辑聚合返回这三组数据
     const res = await getMyCoachList();
     if (res.code === 200 && res.data) {
 
@@ -197,16 +146,19 @@ const quickBook = (coachId) => {
 };
 
 const goToBindSchool = () => {
+  // 跳转到驾校列表页去绑定
   uni.navigateTo({ url: '/pages/student/school-list/school-list' });
 };
 
 const goToBindCoach = () => {
+  // 回到驾校详情页或专属的绑定教练页
   if (studentContext.schoolId) {
     uni.navigateTo({ url: `/pages/student/school-detail/school-detail?id=${studentContext.schoolId}` });
   }
 };
 
 const goToRecommend = () => {
+  // 跳转到教练推荐大厅 (预约 Tab)
   uni.switchTab({ url: '/pages/tabbar/student/appoint/appoint' });
 };
 </script>
@@ -436,7 +388,7 @@ const goToRecommend = () => {
     color: #999;
     text-align: center;
     line-height: 1.5;
-    // margin-bottom: 40rpx;
+    margin-bottom: 40rpx;
   }
 
   .empty-btn {
@@ -453,10 +405,15 @@ const goToRecommend = () => {
     &::after {
       border: none;
     }
+
+    &.primary-outline {
+      color: #007aff;
+      border-color: #007aff;
+    }
   }
 }
 
-/* 5. 全局常驻探索组件 (Explore Banner) */
+/* ================= 全局常驻探索组件 ================= */
 .explore-banner {
   display: flex;
   justify-content: space-between;
@@ -464,7 +421,7 @@ const goToRecommend = () => {
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
   border-radius: 20rpx;
   padding: 30rpx;
-  margin-top: 40rpx;
+  margin-top: 40rpx; /* 与上方的列表或空状态保持距离 */
   margin-bottom: 20rpx;
   box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.05);
   border: 2rpx solid #d9eaff;
@@ -518,7 +475,7 @@ const goToRecommend = () => {
   .explore-right {
     display: flex;
     align-items: center;
-
+    
     .go-text {
       font-size: 26rpx;
       color: #007aff;

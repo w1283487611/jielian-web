@@ -31,10 +31,10 @@ const STUDENT_TAB_TEMPLATE = [
     badge: 0,
   },
   {
-    pagePath: "/pages/tabbar/student/test/test",
-    text: "学员",
-    iconPath: "/static/assets/images/tabbar/personal.png",
-    selectedIconPath: "/static/assets/images/tabbar/personalHL.png",
+    pagePath: "/pages/tabbar/student/enroll/enroll",
+    text: "报名",
+    iconPath: "/static/assets/images/tabbar/huge.png",
+    selectedIconPath: "/static/assets/images/tabbar/hugeHL.png",
     badge: 0,
   },
   {

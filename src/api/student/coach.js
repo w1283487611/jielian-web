@@ -17,6 +17,16 @@ export function getCoachList(query) {
   });
 }
 
+// 获取教练列表 (支持分页、所属驾校、标签等筛选)
+export function getDiscoveryCoachList(query) {
+  return request({
+    url: '/student/coach/discovery-list',
+    method: 'get',
+    params: query
+  });
+}
+
+
 // 获取教练详情
 export function getCoachDetail(id) {
   return request({
