@@ -154,10 +154,10 @@
                         </view>
                     </view>
                 </view>
-
+                <!-- 
                 <view class="filter-group">
                     <view class="group-title">
-                        <!-- 所属区域 <text class="sub-title">({{ currentCity }})</text> -->
+                        
                         所属区域 <text class="sub-title">({{ locationStore.currentCity }})</text>
                     </view>
                     <view class="options-box">
@@ -166,8 +166,23 @@
                             {{ dist }}
                         </view>
                     </view>
-                </view>
+                </view> -->
 
+                <view class="filter-group">
+                    <view class="group-title">
+                        所属区域 <text class="sub-title">({{ locationStore.currentCity || '北京市' }})</text>
+                    </view>
+                    <view class="options-box">
+                        <view class="option-btn" v-for="dist in districtOptions" :key="dist.id"
+                            :class="{ 'active': filterState.districtId === dist.id }"
+                            @click="selectDistrictFilter(dist)">
+                            {{ dist.name }}
+                        </view>
+                        <view class="empty-option" v-if="districtOptions.length === 0">
+                            暂无区县数据
+                        </view>
+                    </view>
+                </view>
             </scroll-view>
 
             <view class="drawer-footer">
@@ -182,11 +197,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import Tabbar from "@/components/tabbar/index.vue";
 import { handleAvatar } from '@/utils/common';
 import { useLocationStore } from '@/store/modules/location';
+import { getDistrictsByCityId } from '@/api/client/location';
 
 const locationStore = useLocationStore();
 // const currentCity = ref('未知');
@@ -196,10 +212,10 @@ const showFilter = ref(false);
 
 // 后端字典或写死的配置数据
 const licenseOptions = [
-  { id: 1, name: 'C1 手动挡' },
-  { id: 2, name: 'C2 自动挡' },
-  { id: 3, name: 'D/E 摩托车' },
-  { id: 4, name: 'B2 大货车' }
+    { id: 1, name: 'C1 手动挡' },
+    { id: 2, name: 'C2 自动挡' },
+    { id: 3, name: 'D/E 摩托车' },
+    { id: 4, name: 'B2 大货车' }
 ];
 
 const queryParams = reactive({
@@ -207,18 +223,21 @@ const queryParams = reactive({
     pageSize: 10,
     orderBy: 'default',
     city: '', // 传给后端的城市参数
-    divisionId: null, //发送给后端的不再是 city 字符串，而是具体的 ID
+    divisionId: null, //发送给后端是具体的行政区划 ID
     lat: null, // 传给后端的纬度
     lng: null  // 传给后端的经度
 });
 
 // 根据 currentCity 动态获取的区县列表 (这里以莆田为例)
-const districtOptions = ['荔城区', '城厢区', '涵江区', '秀屿区', '仙游县'];
+// const districtOptions = ['荔城区', '城厢区', '涵江区', '秀屿区', '仙游县'];
+// 动态获取的区县列表
+const districtOptions = ref([]);
 
 // 抽屉内部的临时状态（用户点确定前，不影响外面的列表）
 const filterState = reactive({
-  licenseId: null,
-  district: ''
+    licenseId: null,
+    districtId: null,
+    districtName: ''
 });
 
 // 外部展示的快捷标签
@@ -276,28 +295,21 @@ const schoolList = ref([
 
 // 模拟网络请求 (真实开发需传 queryParams 给后端)
 const fetchSchools = (reset = false) => {
-  loading.value = true;
-  // 同步当前最新的定位参数给查询条件
-  queryParams.divisionId = locationStore.currentCityId; // 传递行政区划 ID
-  queryParams.city = locationStore.currentCity;
-  queryParams.lat = locationStore.latitude;
-  queryParams.lng = locationStore.longitude;
-  
-  setTimeout(() => {
-    // TODO: 调用 getEnrollSchoolList(queryParams)
-    loading.value = false;
-    uni.stopPullDownRefresh();
-  }, 800);
+    loading.value = true;
+    // 同步当前最新的定位参数给查询条件
+    queryParams.divisionId = locationStore.currentCityId; // 传递行政区划 ID
+    queryParams.city = locationStore.currentCity;
+    queryParams.lat = locationStore.latitude;
+    queryParams.lng = locationStore.longitude;
+
+    setTimeout(() => {
+        // TODO: 调用 getEnrollSchoolList(queryParams)
+        loading.value = false;
+        uni.stopPullDownRefresh();
+    }, 800);
 };
 
-// 页面加载时自动获取一次定位
-onMounted(() => {
-  if (!locationStore.latitude) {
-    locationStore.fetchLocation();
-  }
-});
 
-onShow(() => { fetchSchools(true); });
 onPullDownRefresh(() => { fetchSchools(true); });
 onReachBottom(() => { fetchSchools(false); });
 
@@ -308,63 +320,69 @@ const switchSort = (type) => {
 };
 
 // --- 抽屉操作方法 ---
-const openFilter = () => { 
-  showFilter.value = true; 
+const openFilter = () => {
+    showFilter.value = true;
 };
 
-const closeFilter = () => { 
-  showFilter.value = false; 
+const closeFilter = () => {
+    showFilter.value = false;
 };
 
 const resetFilter = () => {
-  filterState.licenseId = null;
-  filterState.district = '';
+    filterState.licenseId = null;
+    filterState.district = '';
 };
 
 // 点击确定：把筛选条件同步给 queryParams，并生成顶部快捷标签
 const confirmFilter = () => {
-  // 1. 同步参数供后端查询
-  queryParams.licenseId = filterState.licenseId;
-  queryParams.district = filterState.district;
-  
-  // 2. 生成顶部展示标签
-  const tags = [];
-  if (filterState.licenseId) {
-    const lic = licenseOptions.find(item => item.id === filterState.licenseId);
-    if (lic) tags.push(lic.name);
-  }
-  if (filterState.district) {
-    tags.push(filterState.district);
-  }
-  activeTags.value = tags;
+    // 1. 同步参数供后端查询
+    queryParams.licenseId = filterState.licenseId;
+    queryParams.district = filterState.district;
+    queryParams.divisionId = filterState.districtId ? filterState.districtId : locationStore.currentCityId;
 
-  // 3. 关闭抽屉并重新拉取数据
-  closeFilter();
-  fetchSchools(true);
+    // 2. 生成顶部展示标签
+    const tags = [];
+    if (filterState.licenseId) {
+        const lic = licenseOptions.find(item => item.id === filterState.licenseId);
+        if (lic) tags.push(lic.name);
+    }
+    if (filterState.district) {
+        tags.push(filterState.district);
+    }
+    activeTags.value = tags;
+
+    // 3. 关闭抽屉并重新拉取数据
+    closeFilter();
+    fetchSchools(true);
 };
 
-// 重写之前的 removeTag 方法：不仅要删标签，还要清空对应的查询参数
+// 不仅要删标签，还要清空对应的查询参数
 const removeTag = (index) => {
-  const removedTag = activeTags.value[index];
-  activeTags.value.splice(index, 1);
-  
-  // 反向清除查询参数和抽屉状态
-  if (districtOptions.includes(removedTag)) {
-    queryParams.district = '';
-    filterState.district = '';
-  } else {
-    queryParams.licenseId = null;
-    filterState.licenseId = null;
-  }
-  
-  fetchSchools(true);
+    const removedTag = activeTags.value[index];
+    activeTags.value.splice(index, 1);
+
+    // 判断被删掉的标签是不是区县名
+    const isDistrict = districtOptions.value.some(dist => dist.name === removedTag);
+
+    // 反向清除查询参数和抽屉状态
+    if (isDistrict) {
+        filterState.districtId = null;
+        filterState.districtName = '';
+        // 区县被删了，查询范围退回到整个“市”
+        queryParams.divisionId = locationStore.currentCityId;
+    } else {
+        filterState.licenseId = null;
+        queryParams.licenseId = null;
+    }
+
+    fetchSchools(true);
 };
 
 // 点击清空所有标签
 const clearAllTags = () => {
-  activeTags.value = [];
-  resetFilter();
-  confirmFilter(); // 触发重置并查询
+    activeTags.value = [];
+    resetFilter();
+    confirmFilter(); // 触发重置并查询
 };
 
 const makePhoneCall = (phone) => {
@@ -377,8 +395,8 @@ const goToSchoolDetail = (id) => {
 
 const goToSearch = () => { uni.showToast({ title: '去搜索页', icon: 'none' }); };
 // 点击城市名称，跳转到我们手写的 A-Z 城市选择页
-const chooseCity = () => { 
-  uni.navigateTo({ url: '/pages/common/city-picker/city-picker' }); 
+const chooseCity = () => {
+    uni.navigateTo({ url: '/pages/common/city-picker/city-picker' });
 };
 // 去对应排行或附近列表
 const goToRank = (type) => { uni.showToast({ title: `${type === 'school' ? '驾校' : '教练'}排行榜`, icon: 'none' }); };
@@ -393,13 +411,63 @@ const goToNearby = (type) => {
 
 // 预留的测试原生位置选择器的方法 (未来在添加收获地址、练车点打卡时可用)
 const testNativeLocationPicker = () => {
-  uni.chooseLocation({
-    success: (res) => {
-      console.log('用户选择了位置：', res.name, res.address, res.latitude, res.longitude);
-      // locationStore.setLocation(res.latitude, res.longitude);
-    }
-  });
+    uni.chooseLocation({
+        success: (res) => {
+            console.log('用户选择了位置：', res.name, res.address, res.latitude, res.longitude);
+            // locationStore.setLocation(res.latitude, res.longitude);
+        }
+    });
 };
+
+// 抽屉内选择区县的交互
+const selectDistrictFilter = (dist) => {
+    // 如果点击已选中的，则取消选中
+    if (filterState.districtId === dist.id) {
+        filterState.districtId = null;
+        filterState.districtName = '';
+    } else {
+        filterState.districtId = dist.id;
+        filterState.districtName = dist.name;
+    }
+};
+
+// 页面加载时自动获取一次定位
+onMounted(() => {
+    if (!locationStore.latitude) {
+        locationStore.fetchLocation();
+    }
+});
+
+onShow(() => { fetchSchools(true); });
+
+// 监听全局城市变化：一换城市，立刻重置区县并重新拉取区县列表
+watch(
+    () => locationStore.currentCityId,
+    async (newCityId) => {
+        // 1. 获取新城市的区县列表 (如果 newCityId 为 null，后端默认给北京)
+        try {
+            const res = await getDistrictsByCityId(newCityId);
+            if (res.code === 200) {
+                districtOptions.value = res.data || [];
+            }
+        } catch (e) {
+            console.error('获取区县列表失败', e);
+        }
+
+        // 2. 清空之前选中的区县状态
+        filterState.districtId = null;
+        filterState.districtName = '';
+
+        // 3. 清理顶部已经存在的旧区县快捷标签
+        activeTags.value = activeTags.value.filter(tag =>
+            !districtOptions.value.some(dist => dist.name === tag) && tag !== '未知区县'
+        );
+
+        // 4. 城市换了，驾校列表也得重新拉一遍
+        fetchSchools(true);
+    },
+    { immediate: true } // 页面初始化时立即执行一次
+);
 </script>
 
 <style lang="scss" scoped>
@@ -852,117 +920,133 @@ const testNativeLocationPicker = () => {
 
 /* ================= 侧拉筛选抽屉样式 ================= */
 .filter-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 999;
-  animation: fadeIn 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .filter-drawer {
-  position: fixed;
-  top: 0; right: 0; bottom: 0;
-  width: 600rpx; /* 抽屉宽度 */
-  background-color: #fff;
-  z-index: 1000;
-  transform: translateX(100%); /* 默认藏在屏幕右侧外部 */
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex;
-  flex-direction: column;
-  
-  /* 激活时滑入 */
-  &.show {
-    transform: translateX(0);
-  }
-
-  /* 抽屉内部滚动区 */
-  .drawer-content {
-    flex: 1;
-    height: 0;
-    padding: calc(40rpx + env(safe-area-inset-top)) 30rpx 40rpx;
-    box-sizing: border-box;
-  }
-
-  .filter-group {
-    margin-bottom: 50rpx;
-
-    .group-title {
-      font-size: 30rpx;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 24rpx;
-
-      .sub-title {
-        font-size: 24rpx;
-        color: #999;
-        font-weight: normal;
-        margin-left: 12rpx;
-      }
-    }
-
-    .options-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20rpx;
-
-      .option-btn {
-        width: calc((100% - 40rpx) / 3); /* 每行放3个，减去间距 */
-        height: 64rpx;
-        line-height: 64rpx;
-        text-align: center;
-        background-color: #f5f7fa;
-        color: #333;
-        font-size: 24rpx;
-        border-radius: 8rpx;
-        border: 2rpx solid transparent;
-        transition: all 0.2s;
-        box-sizing: border-box;
-
-        /* 选中状态：主色调高亮 */
-        &.active {
-          background-color: #e6f2ff;
-          color: #007aff;
-          font-weight: bold;
-          border-color: #007aff;
-        }
-      }
-    }
-  }
-
-  /* 底部操作区 */
-  .drawer-footer {
-    display: flex;
-    padding: 20rpx 30rpx calc(20rpx + env(safe-area-inset-bottom));
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 600rpx;
+    /* 抽屉宽度 */
     background-color: #fff;
-    box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.04);
-    gap: 30rpx;
+    z-index: 1000;
+    transform: translateX(100%);
+    /* 默认藏在屏幕右侧外部 */
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
 
-    button {
-      flex: 1;
-      height: 80rpx;
-      line-height: 80rpx;
-      font-size: 30rpx;
-      border-radius: 40rpx;
-      margin: 0;
-      &::after { border: none; }
+    /* 激活时滑入 */
+    &.show {
+        transform: translateX(0);
     }
 
-    .reset-btn {
-      background-color: #f5f7fa;
-      color: #666;
+    /* 抽屉内部滚动区 */
+    .drawer-content {
+        flex: 1;
+        height: 0;
+        padding: calc(40rpx + env(safe-area-inset-top)) 30rpx 40rpx;
+        box-sizing: border-box;
     }
 
-    .confirm-btn {
-      background-color: #007aff;
-      color: #fff;
-      font-weight: bold;
-      box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
+    .filter-group {
+        margin-bottom: 50rpx;
+
+        .group-title {
+            font-size: 30rpx;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 24rpx;
+
+            .sub-title {
+                font-size: 24rpx;
+                color: #999;
+                font-weight: normal;
+                margin-left: 12rpx;
+            }
+        }
+
+        .options-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20rpx;
+
+            .option-btn {
+                width: calc((100% - 40rpx) / 3);
+                /* 每行放3个，减去间距 */
+                height: 64rpx;
+                line-height: 64rpx;
+                text-align: center;
+                background-color: #f5f7fa;
+                color: #333;
+                font-size: 24rpx;
+                border-radius: 8rpx;
+                border: 2rpx solid transparent;
+                transition: all 0.2s;
+                box-sizing: border-box;
+
+                /* 选中状态：主色调高亮 */
+                &.active {
+                    background-color: #e6f2ff;
+                    color: #007aff;
+                    font-weight: bold;
+                    border-color: #007aff;
+                }
+            }
+        }
     }
-  }
+
+    /* 底部操作区 */
+    .drawer-footer {
+        display: flex;
+        padding: 20rpx 30rpx calc(20rpx + env(safe-area-inset-bottom));
+        background-color: #fff;
+        box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.04);
+        gap: 30rpx;
+
+        button {
+            flex: 1;
+            height: 80rpx;
+            line-height: 80rpx;
+            font-size: 30rpx;
+            border-radius: 40rpx;
+            margin: 0;
+
+            &::after {
+                border: none;
+            }
+        }
+
+        .reset-btn {
+            background-color: #f5f7fa;
+            color: #666;
+        }
+
+        .confirm-btn {
+            background-color: #007aff;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
+        }
+    }
 }
 </style>

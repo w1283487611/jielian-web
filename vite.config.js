@@ -3,10 +3,11 @@ import uni from "@dcloudio/vite-plugin-uni";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode, command }) => {
+export default defineConfig( ({ mode, command }) => {
   // mode是当前模式（如development、staging、production）
   const isProduction = mode === "production";
-  if (isProduction) {// 如果是生产模式，设置更多优化
+  if (isProduction) {
+    // 如果是生产模式，设置更多优化
     console.log("✅ Vite 运行在生产模式");
     // 你可以在这里添加生产模式特定的配置
   } else {
@@ -14,8 +15,8 @@ export default defineConfig(({ mode, command }) => {
   }
   // 加载环境变量，envDir 指定目录，默认是项目根目录
   const env = loadEnv(mode, process.cwd());
-  console.log('当前环境变量：', env)
-  const baseUrl = env.VITE_API_BASE_URL // 获取环境变量
+  console.log("当前环境变量：", env);
+  const baseUrl = env.VITE_API_BASE_URL; // 获取环境变量
   // const baseUrl = "http://localhost:8081"; // 后端接口
   const { VITE_APP_ENV } = env;
   return {
@@ -27,20 +28,7 @@ export default defineConfig(({ mode, command }) => {
     // 则设置 baseUrl 为 /admin/。
     base: VITE_APP_ENV === "production" ? "/" : "/",
     plugins: [
-      uni(),
-      // 只需配置 uni 插件，并在其选项中传递 vue 的编译设置
-      // uni({
-      //   vueOptions: {
-      //     template: {
-      //       compilerOptions: {
-      //         // 核心配置：将 uni- 开头的标签都视为自定义元素
-      //         isCustomElement: (tag) => tag.startsWith("uni-"),
-      //       },
-      //     },
-      //   },
-      // }),
-
-      // createVitePlugins(env, command === 'build'),
+      uni()
     ],
     resolve: {
       // https://cn.vitejs.dev/config/#resolve-alias
@@ -72,12 +60,12 @@ export default defineConfig(({ mode, command }) => {
     // 其他优化配置
     build: {
       // 生产构建优化
-      minify: isProduction ? 'terser' : false,
+      minify: isProduction ? "terser" : false,
       sourcemap: !isProduction,
       // 摇树优化
       rollupOptions: {
-        treeshake: isProduction
-      }
+        treeshake: isProduction,
+      },
     },
   };
 });
