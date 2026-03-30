@@ -3,57 +3,55 @@
 
         <view class="custom-header">
             <view class="location" @click="chooseCity">
-                <!-- <text class="city-name">{{ currentCity }}</text> -->
-                <!-- <text class="city-name">{{ locationStore.currentCity }}</text> -->
                 <text class="city-name">{{ locationStore.currentCity || '定位中...' }}</text>
-                <text class="iconfont icon-caret-down"></text>
+                <uni-icons type="bottom" size="14" color="#333" class="caret-icon"></uni-icons>
             </view>
             <view class="search-box" @click="goToSearch">
-                <text class="iconfont icon-search"></text>
+                <uni-icons type="search" size="18" color="#999" class="search-icon"></uni-icons>
                 <text class="placeholder">搜索心仪的驾校</text>
             </view>
-            <view class="msg-icon">
-                <text class="iconfont icon-message"></text>
-            </view>
+            <!-- <view class="msg-icon">
+                <uni-icons type="chatboxes-filled" size="24" color="#333"></uni-icons>
+            </view> -->
         </view>
 
         <view class="grid-nav">
             <view class="grid-item" @click="goToRank('school')">
                 <view class="icon-wrap bg-blue">
-                    <text class="iconfont icon-trophy-fill"></text>
+                    <uni-icons type="medal-filled" size="26" color="#fff"></uni-icons>
                 </view>
                 <text class="text">驾校排行</text>
             </view>
             <view class="grid-item" @click="goToRank('coach')">
                 <view class="icon-wrap bg-orange">
-                    <text class="iconfont icon-user-tie"></text>
+                    <uni-icons type="person-filled" size="26" color="#fff"></uni-icons>
                 </view>
                 <text class="text">教练排行</text>
             </view>
             <view class="grid-item" @click="goToNearby('school')">
                 <view class="icon-wrap bg-green">
-                    <text class="iconfont icon-map-marker"></text>
+                    <uni-icons type="location-filled" size="26" color="#fff"></uni-icons>
                 </view>
                 <text class="text">附近驾校</text>
             </view>
             <view class="grid-item" @click="goToNearby('coach')">
                 <view class="icon-wrap bg-purple">
-                    <text class="iconfont icon-compass"></text>
+                    <uni-icons type="paperplane-filled" size="26" color="#fff"></uni-icons>
                 </view>
                 <text class="text">附近教练</text>
             </view>
         </view>
 
-        <view class="help-banner">
+        <!-- <view class="help-banner">
             <view class="banner-left">
-                <text class="iconfont icon-robot"></text>
+                <uni-icons type="headphones" size="30" color="#007aff" class="robot-icon"></uni-icons>
                 <view class="text-group">
                     <text class="title">你想找什么样的驾校？</text>
                     <text class="sub">练车近 · 价格低 · 口碑好 · 合格率高</text>
                 </view>
             </view>
             <button class="help-btn">帮我找</button>
-        </view>
+        </view> -->
 
         <view class="sticky-filter">
             <view class="filter-tabs">
@@ -68,16 +66,16 @@
 
                 <view class="filter-btn" @click="openFilter">
                     <text>筛选</text>
-                    <text class="iconfont icon-filter"></text>
+                    <uni-icons type="bars" size="14" color="#007aff" class="filter-icon"></uni-icons>
                 </view>
             </view>
 
             <view class="quick-tags" v-if="activeTags.length > 0">
-                <view class="tag-item" v-for="(tag, index) in activeTags" :key="index">
-                    {{ tag }} <text class="iconfont icon-close" @click="removeTag(index)"></text>
+                <view class="tag-item" v-for="(tag, index) in activeTags" :key="index" @click="removeTag(index)">
+                    {{ tag }} <uni-icons type="closeempty" size="12" color="#999" class="close-icon"></uni-icons>
                 </view>
                 <view class="clear-all" @click="clearAllTags">
-                    <text class="iconfont icon-delete"></text> 清除
+                    <uni-icons type="trash" size="14" color="#999" class="trash-icon"></uni-icons> 清除
                 </view>
             </view>
         </view>
@@ -87,24 +85,20 @@
                 @click="goToSchoolDetail(school.id)">
 
                 <view class="cover-img-wrap">
-                    <image class="cover-img" :src="handleAvatar(school.coverImage)" mode="aspectFill"></image>
-                    <view class="play-icon" v-if="school.hasVideo">
-                        <text class="iconfont icon-play"></text>
-                    </view>
+                    <image class="cover-img" :src="handleImageUrl(school.coverImage)" mode="aspectFill"></image>
                 </view>
 
                 <view class="info-wrap">
                     <view class="title-row">
                         <text class="name">{{ school.name }}</text>
                         <view class="crown-tag" v-if="school.isPremium">
-                            <text class="iconfont icon-crown"></text> 黄金
+                            <uni-icons type="vip" size="12" color="#fff" class="crown-icon"></uni-icons> 黄金
                         </view>
                     </view>
 
                     <view class="rating-row">
                         <view class="stars">
-                            <text class="iconfont icon-star-fill active" v-for="i in Math.floor(school.rating)"
-                                :key="i"></text>
+                            <uni-icons type="star-filled" size="12" color="#ff9800" class="star-icon" v-for="i in Math.floor(school.rating)" :key="i"></uni-icons>
                         </view>
                         <text class="score">{{ school.rating }}</text>
                         <text class="reviews">{{ school.reviewCount }}条评价</text>
@@ -112,13 +106,13 @@
 
                     <view class="price-row">
                         <view class="price-box">
-                            <text class="num">{{ school.minPrice }}</text>
+                            <text class="num">{{ school.minPrice || '? ' }}</text>
                             <text class="unit">元起</text>
-                            <text class="license">C1 小车</text>
+                            <text class="license">{{ school.licenses || '全车型' }}</text>
                         </view>
                         <view class="location-box">
                             <text class="district">{{ school.district }}</text>
-                            <text class="distance">{{ school.distance }}km</text>
+                            <text class="distance">{{ school.distance || '? ' }}km</text>
                         </view>
                     </view>
 
@@ -129,13 +123,15 @@
                 </view>
 
                 <view class="phone-btn" @click.stop="makePhoneCall(school.phone)">
-                    <text class="iconfont icon-phone"></text>
+                    <uni-icons type="phone-filled" size="18" color="#007aff"></uni-icons>
                 </view>
             </view>
 
             <view class="load-more">
                 <text v-if="loading">加载中...</text>
-                <text v-else>到底了~</text>
+                <text v-else-if="schoolList.length >= total && total > 0">没有更多驾校了~</text>
+                <text v-else-if="schoolList.length === 0 && !loading">该区域暂无符合条件的驾校</text>
+                <text v-else>上拉加载更多</text>
             </view>
         </view>
 
@@ -154,19 +150,6 @@
                         </view>
                     </view>
                 </view>
-                <!-- 
-                <view class="filter-group">
-                    <view class="group-title">
-                        
-                        所属区域 <text class="sub-title">({{ locationStore.currentCity }})</text>
-                    </view>
-                    <view class="options-box">
-                        <view class="option-btn" v-for="dist in districtOptions" :key="dist"
-                            :class="{ 'active': filterState.district === dist }" @click="filterState.district = dist">
-                            {{ dist }}
-                        </view>
-                    </view>
-                </view> -->
 
                 <view class="filter-group">
                     <view class="group-title">
@@ -197,41 +180,43 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import Tabbar from "@/components/tabbar/index.vue";
-import { handleAvatar } from '@/utils/common';
+import { handleAvatar, handleImageUrl } from '@/utils/common';
 import { useLocationStore } from '@/store/modules/location';
 import { getDistrictsByCityId } from '@/api/client/location';
+import { getLicenseTypes } from '@/api/client/license';
+import { getEnrollSchoolList } from '@/api/student/school';
 
 const locationStore = useLocationStore();
-// const currentCity = ref('未知');
+
+// --- 状态控制 ---
 const loading = ref(false);
 // --- 筛选抽屉状态与数据 ---
 const showFilter = ref(false);
+// 外部展示的快捷标签
+const activeTags = ref([]);
 
-// 后端字典或写死的配置数据
-const licenseOptions = [
-    { id: 1, name: 'C1 手动挡' },
-    { id: 2, name: 'C2 自动挡' },
-    { id: 3, name: 'D/E 摩托车' },
-    { id: 4, name: 'B2 大货车' }
-];
+// --- 数据源 ---
+const licenseOptions = ref([]);
+const schoolList = ref([]);
+// 动态获取的区县列表
+const districtOptions = ref([]);
+const total = ref(0); // 驾校总数，用于分页判断
 
+// --- 查询参数 (发给后端的对象) ---
 const queryParams = reactive({
     pageNum: 1,
     pageSize: 10,
+    keyword: '', // 搜索栏关键词
     orderBy: 'default',
     city: '', // 传给后端的城市参数
     divisionId: null, //发送给后端是具体的行政区划 ID
+    licenseId: null, // 驾照类型ID
     lat: null, // 传给后端的纬度
     lng: null  // 传给后端的经度
 });
-
-// 根据 currentCity 动态获取的区县列表 (这里以莆田为例)
-// const districtOptions = ['荔城区', '城厢区', '涵江区', '秀屿区', '仙游县'];
-// 动态获取的区县列表
-const districtOptions = ref([]);
 
 // 抽屉内部的临时状态（用户点确定前，不影响外面的列表）
 const filterState = reactive({
@@ -240,97 +225,114 @@ const filterState = reactive({
     districtName: ''
 });
 
-// 外部展示的快捷标签
-const activeTags = ref([]);
+// 驾驶证名字规格化
+function licenseNamePT(code, name) {
+    name = name.replace("驾驶证", "");
+    return code + name;
+}
 
-// 模拟驾校列表数据
-const schoolList = ref([
-    {
-        id: 1,
-        name: '大众驾校',
-        coverImage: '/static/assets/images/mock-school1.jpg',
-        isPremium: true,
-        rating: 5.0,
-        reviewCount: 92,
-        minPrice: 2888,
-        district: '荔城区',
-        distance: 2.3,
-        hasVideo: true,
-        rank: 3,
-        tags: ['1年会员', '服务热情'],
-        phone: '13800000001'
-    },
-    {
-        id: 2,
-        name: '九华驾校体育中心分校',
-        coverImage: '/static/assets/images/mock-school2.jpg',
-        isPremium: true,
-        rating: 5.0,
-        reviewCount: 306,
-        minPrice: 3200,
-        district: '城厢区',
-        distance: 2.4,
-        hasVideo: false,
-        rank: null,
-        tags: ['3年会员', '服务热情', '有接送'],
-        phone: '13800000002'
-    },
-    {
-        id: 3,
-        name: '涵江大地驾校',
-        coverImage: '/static/assets/images/mock-school3.jpg',
-        isPremium: false,
-        rating: 5.0,
-        reviewCount: 14,
-        minPrice: 3300,
-        district: '荔城区',
-        distance: 2.6,
-        hasVideo: false,
-        rank: null,
-        tags: ['环境好', '场地大'],
-        phone: '13800000003'
+// --- 核心网络请求 ---
+// 拉取驾照类型的函数
+const fetchLicenseOptions = async () => {
+    try {
+        const res = await getLicenseTypes();
+        if (res.code === 200) {
+
+            if (res.data) {
+                licenseOptions.value = res.data.map(item => ({
+                    ...item,
+                    name: licenseNamePT(item.code, item.name)
+                }))
+            } else licenseOptions.value = [];
+        }
+    } catch (error) {
+        console.error('获取驾照类型失败', error);
     }
-]);
+};
 
-
-// 模拟网络请求 (真实开发需传 queryParams 给后端)
-const fetchSchools = (reset = false) => {
+// 拉取驾校数据
+const fetchSchools = async (reset = false) => {
+    if (reset) {
+        queryParams.pageNum = 1;
+        // 只有在强制重置时才清空列表，避免闪烁
+    }
+    if (loading.value) return; // 防抖
     loading.value = true;
+
     // 同步当前最新的定位参数给查询条件
-    queryParams.divisionId = locationStore.currentCityId; // 传递行政区划 ID
+    queryParams.divisionId = filterState.districtId ? filterState.districtId : locationStore.currentCityId; // 传递行政区划 ID
     queryParams.city = locationStore.currentCity;
     queryParams.lat = locationStore.latitude;
     queryParams.lng = locationStore.longitude;
 
-    setTimeout(() => {
-        // TODO: 调用 getEnrollSchoolList(queryParams)
+    try {
+        const res = await getEnrollSchoolList(queryParams);
+        if (res.code === 200) {
+            const rows = res.rows || [];
+            if (reset) {
+                schoolList.value = rows;
+            } else {
+                schoolList.value = [...schoolList.value, ...rows];
+            }
+            total.value = res.total || 0;
+        }
+    } catch (error) {
+        console.error('获取驾校列表失败', error);
+    } finally {
         loading.value = false;
         uni.stopPullDownRefresh();
-    }, 800);
+    }
 };
 
-
-onPullDownRefresh(() => { fetchSchools(true); });
-onReachBottom(() => { fetchSchools(false); });
-
-// 交互事件
+// --- 交互事件 ---
 const switchSort = (type) => {
+    if (queryParams.orderBy === type) return;
     queryParams.orderBy = type;
     fetchSchools(true);
+};
+
+const goToSchoolDetail = (id) => {
+    uni.navigateTo({ url: `/pages/student/school-detail/school-detail?id=${id}` });
+};
+// 点击城市名称，跳转到我们手写的 A-Z 城市选择页
+const chooseCity = () => {
+    uni.navigateTo({ url: '/pages/common/city-picker/city-picker' });
+};
+const goToSearch = () => { uni.showToast({ title: '去搜索页', icon: 'none' }); };
+// 去对应排行或附近列表
+const goToRank = (type) => { uni.showToast({ title: `${type === 'school' ? '驾校' : '教练'}排行榜`, icon: 'none' }); };
+const goToNearby = (type) => {
+    if (type === 'coach') {
+        // 复用我们上一节写的教练发现大厅！
+        uni.navigateTo({ url: '/pages/student/coach-list/coach-list' });
+    } else {
+        uni.showToast({ title: '附近驾校列表', icon: 'none' });
+    }
 };
 
 // --- 抽屉操作方法 ---
 const openFilter = () => {
     showFilter.value = true;
 };
-
 const closeFilter = () => {
     showFilter.value = false;
 };
-
 const resetFilter = () => {
     filterState.licenseId = null;
-    filterState.district = '';
+    filterState.districtId = null;
+    filterState.districtName = '';
+};
+
+// 抽屉内选择区县的交互
+const selectDistrictFilter = (dist) => {
+    // 如果点击已选中的，则取消选中
+    if (filterState.districtId === dist.id) {
+        filterState.districtId = null;
+        filterState.districtName = '';
+    } else {
+        filterState.districtId = dist.id;
+        filterState.districtName = dist.name;
+    }
 };
 
 // 点击确定：把筛选条件同步给 queryParams，并生成顶部快捷标签
@@ -343,11 +345,11 @@ const confirmFilter = () => {
     // 2. 生成顶部展示标签
     const tags = [];
     if (filterState.licenseId) {
-        const lic = licenseOptions.find(item => item.id === filterState.licenseId);
-        if (lic) tags.push(lic.name);
+        const lic = licenseOptions.value.find(item => item.id === filterState.licenseId);
+        if (lic) tags.push(lic.code);
     }
-    if (filterState.district) {
-        tags.push(filterState.district);
+    if (filterState.districtName) {
+        tags.push(filterState.districtName);
     }
     activeTags.value = tags;
 
@@ -389,26 +391,6 @@ const makePhoneCall = (phone) => {
     uni.makePhoneCall({ phoneNumber: phone });
 };
 
-const goToSchoolDetail = (id) => {
-    uni.navigateTo({ url: `/pages/student/school-detail/school-detail?id=${id}` });
-};
-
-const goToSearch = () => { uni.showToast({ title: '去搜索页', icon: 'none' }); };
-// 点击城市名称，跳转到我们手写的 A-Z 城市选择页
-const chooseCity = () => {
-    uni.navigateTo({ url: '/pages/common/city-picker/city-picker' });
-};
-// 去对应排行或附近列表
-const goToRank = (type) => { uni.showToast({ title: `${type === 'school' ? '驾校' : '教练'}排行榜`, icon: 'none' }); };
-const goToNearby = (type) => {
-    if (type === 'coach') {
-        // 🔥 完美复用我们上一节写的教练发现大厅！
-        uni.navigateTo({ url: '/pages/student/coach-list/coach-list' });
-    } else {
-        uni.showToast({ title: '附近驾校列表', icon: 'none' });
-    }
-};
-
 // 预留的测试原生位置选择器的方法 (未来在添加收获地址、练车点打卡时可用)
 const testNativeLocationPicker = () => {
     uni.chooseLocation({
@@ -419,26 +401,26 @@ const testNativeLocationPicker = () => {
     });
 };
 
-// 抽屉内选择区县的交互
-const selectDistrictFilter = (dist) => {
-    // 如果点击已选中的，则取消选中
-    if (filterState.districtId === dist.id) {
-        filterState.districtId = null;
-        filterState.districtName = '';
-    } else {
-        filterState.districtId = dist.id;
-        filterState.districtName = dist.name;
-    }
-};
-
 // 页面加载时自动获取一次定位
 onMounted(() => {
     if (!locationStore.latitude) {
         locationStore.fetchLocation();
     }
+    fetchLicenseOptions();
 });
 
 onShow(() => { fetchSchools(true); });
+
+
+onPullDownRefresh(() => { fetchSchools(true); });
+
+// 触底加载下一页
+onReachBottom(() => {
+  if (schoolList.value.length < total.value) {
+    queryParams.pageNum++;
+    fetchSchools(false);
+  }
+});
 
 // 监听全局城市变化：一换城市，立刻重置区县并重新拉取区县列表
 watch(
@@ -499,9 +481,7 @@ watch(
             color: #333;
         }
 
-        .icon-caret-down {
-            font-size: 24rpx;
-            color: #333;
+        .caret-icon {
             margin-left: 4rpx;
         }
     }
@@ -515,9 +495,7 @@ watch(
         border-radius: 34rpx;
         padding: 0 24rpx;
 
-        .icon-search {
-            color: #999;
-            font-size: 32rpx;
+        .search-icon {
             margin-right: 12rpx;
         }
 
@@ -529,11 +507,6 @@ watch(
 
     .msg-icon {
         margin-left: 30rpx;
-
-        .icon-message {
-            font-size: 44rpx;
-            color: #333;
-        }
     }
 }
 
@@ -556,11 +529,6 @@ watch(
             justify-content: center;
             align-items: center;
             margin-bottom: 16rpx;
-
-            .iconfont {
-                font-size: 44rpx;
-                color: #fff;
-            }
 
             &.bg-blue {
                 background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -601,9 +569,7 @@ watch(
         display: flex;
         align-items: center;
 
-        .icon-robot {
-            font-size: 60rpx;
-            color: #007aff;
+        .robot-icon {
             margin-right: 20rpx;
         }
 
@@ -673,8 +639,7 @@ watch(
             display: flex;
             align-items: center;
 
-            .icon-filter {
-                font-size: 24rpx;
+            .filter-icon {
                 margin-left: 6rpx;
             }
         }
@@ -695,10 +660,8 @@ watch(
             display: flex;
             align-items: center;
 
-            .icon-close {
-                font-size: 18rpx;
+            .close-icon {
                 margin-left: 8rpx;
-                color: #999;
             }
         }
 
@@ -709,8 +672,7 @@ watch(
             display: flex;
             align-items: center;
 
-            .icon-delete {
-                font-size: 24rpx;
+            .trash-icon {
                 margin-right: 4rpx;
             }
         }
@@ -791,8 +753,7 @@ watch(
                     display: flex;
                     align-items: center;
 
-                    .icon-crown {
-                        font-size: 22rpx;
+                    .crown-icon {
                         margin-right: 4rpx;
                     }
                 }
@@ -809,9 +770,7 @@ watch(
                     display: flex;
                     margin-right: 8rpx;
 
-                    .icon-star-fill {
-                        color: #ff9800;
-                        font-size: 20rpx;
+                    .star-icon {
                         margin-right: 2rpx;
                     }
                 }
@@ -897,11 +856,6 @@ watch(
             display: flex;
             justify-content: center;
             align-items: center;
-
-            .icon-phone {
-                color: #007aff;
-                font-size: 32rpx;
-            }
         }
     }
 
@@ -946,21 +900,17 @@ watch(
     right: 0;
     bottom: 0;
     width: 600rpx;
-    /* 抽屉宽度 */
     background-color: #fff;
     z-index: 1000;
     transform: translateX(100%);
-    /* 默认藏在屏幕右侧外部 */
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     flex-direction: column;
 
-    /* 激活时滑入 */
     &.show {
         transform: translateX(0);
     }
 
-    /* 抽屉内部滚动区 */
     .drawer-content {
         flex: 1;
         height: 0;
@@ -992,7 +942,6 @@ watch(
 
             .option-btn {
                 width: calc((100% - 40rpx) / 3);
-                /* 每行放3个，减去间距 */
                 height: 64rpx;
                 line-height: 64rpx;
                 text-align: center;
@@ -1004,7 +953,6 @@ watch(
                 transition: all 0.2s;
                 box-sizing: border-box;
 
-                /* 选中状态：主色调高亮 */
                 &.active {
                     background-color: #e6f2ff;
                     color: #007aff;
@@ -1015,7 +963,6 @@ watch(
         }
     }
 
-    /* 底部操作区 */
     .drawer-footer {
         display: flex;
         padding: 20rpx 30rpx calc(20rpx + env(safe-area-inset-bottom));

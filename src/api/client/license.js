@@ -51,3 +51,12 @@ export function delLicense(id) {
     method: 'delete'
   })
 }
+
+
+// 获取系统支持的驾照类型列表
+export function getLicenseTypes() {
+  return request({
+    url: '/client/license/license-types',
+    method: 'get'
+  });
+}
