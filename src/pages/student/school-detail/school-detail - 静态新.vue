@@ -5,12 +5,12 @@
             v-if="schoolData.mediaList && schoolData.mediaList.length > 0">
             <swiper-item v-for="(media, index) in schoolData.mediaList" :key="media.fileId || index">
                 <view class="media-wrapper" v-if="media.category === 2">
-                    <video class="swiper-video" :src="handleVideoUrl(media.previewUrl)"
-                        :poster="handleImageUrl(media.thumbnailUrl)" object-fit="cover" controls></video>
+                    <video class="swiper-video" :src="media.previewUrl" :poster="media.thumbnailUrl" object-fit="cover"
+                        controls></video>
                     <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
                 </view>
                 <view class="media-wrapper" v-else>
-                    <image class="swiper-image" :src="handleImageUrl(media.accessUrl)" mode="aspectFill"></image>
+                    <image class="swiper-image" :src="media.accessUrl" mode="aspectFill"></image>
                     <text class="media-tag" v-if="media.tag">{{ media.tag }}</text>
                 </view>
             </swiper-item>
@@ -18,7 +18,7 @@
 
         <view class="media-swiper default-bg" v-else>
             <view class="media-wrapper">
-                <image class="swiper-image" src="/static/assets/images/defImg.png" mode="aspectFill"></image>
+                <image class="swiper-image" src="/static/assets/images/default-school.jpg" mode="aspectFill"></image>
             </view>
         </view>
 
@@ -39,7 +39,7 @@
                     <text class="num">{{ schoolData.successRate }}%</text>
                     <text class="label">考试通过率</text>
                 </view>
-                <view class="stat-item"  @click="goToCoachList">
+                <view class="stat-item">
                     <text class="num">{{ schoolData.totalCoaches }}</text>
                     <text class="label">优质教练</text>
                 </view>
@@ -90,20 +90,6 @@
             </view>
         </view>
 
-        <view class="base-card coach-entry-card" @click="goToCoachList">
-            <view class="coach-entry-left">
-                <view class="icon-bg">
-                    <uni-icons type="staff-filled" size="20" color="#007aff"></uni-icons>
-                </view>
-                <text class="title">驾校教练团队</text>
-                <text class="count" v-if="schoolData.totalCoaches"> (共{{ schoolData.totalCoaches }}名)</text>
-            </view>
-            <view class="coach-entry-right">
-                <text class="desc">查看本校优质教练</text>
-                <uni-icons type="right" size="16" color="#999"></uni-icons>
-            </view>
-        </view>
-
         <view class="base-card package-section" v-if="packageList.length > 0">
             <view class="section-title">招生套餐</view>
             <view class="package-list">
@@ -132,39 +118,10 @@
         <view class="bottom-spacer"></view>
 
         <view class="fixed-bottom-bar">
-            <template  v-if="isCurrentSchool">
-                <view class="icon-btn-group">
-                    <view class="icon-btn" @click="callSchool">
-                        <uni-icons type="phone-filled" size="22" color="#007aff"></uni-icons>
-                        <text class="icon-text" style="color:#007aff;">联系驾校</text>
-                    </view>
-                </view>
-                <button class="action-btn disabled-btn">您已报名该驾校</button>
-            </template>
-
-            <template v-else>
+            <template v-if="isFromGuide">
                 <button class="action-btn plain-btn" @click="goBack">再看看</button>
                 <button class="action-btn primary-btn" @click="selectAndBack">认准这家驾校</button>
             </template>
-
-
-            <!-- 
-                        <template v-if="isFromGuide">
-                <button class="action-btn plain-btn" @click="goBack">再看看</button>
-                <button class="action-btn primary-btn" @click="selectAndBack">认准这家驾校</button>
-            </template>
-            
-            <template v-else-if="isCurrentSchool">
-                <view class="icon-btn-group">
-                    <view class="icon-btn" @click="callSchool">
-                        <uni-icons type="phone-filled" size="22" color="#007aff"></uni-icons>
-                        <text class="icon-text" style="color:#007aff;">联系驾校</text>
-                    </view>
-                </view>
-                <button class="action-btn disabled-btn">您已报名该驾校</button>
-            </template>
-
-
 
             <template v-else>
                 <view class="icon-btn-group">
@@ -179,47 +136,37 @@
                     </view>
                 </view>
                 <button class="action-btn primary-btn" @click="callSchool">立即电话咨询</button>
-            </template> -->
+            </template>
         </view>
 
     </view>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { getSchoolDetail } from '@/api/student/school';
-import { handleImageUrl, handleVideoUrl } from '@/utils/common';
-import useStudentStore from '@/store/modules/student';
 
 const schoolId = ref(null);
-const isFromGuide = ref(false); // 标识是否来自 guide.vue
-const isFavorite = ref(false); // 关注状态
+const isFromGuide = ref(false);
+const isFavorite = ref(false);
 
-// 判断当前展示的驾校是否等于 Store 中学员已报名的驾校
-const isCurrentSchool = computed(() => {
-    if(schoolId.value && schoolId.value === 80001) return true;
-    return false;
-    // return studentStore.schoolId && schoolId.value && studentStore.schoolId === schoolId.value;
-});
-
-// 在你原有的数据基础上扩充了评分、坐标等字段
+// 初始化响应式数据
 const schoolData = reactive({
-    name: '',
-    address: '暂无详细地址',
+    name: '加载中...',
+    address: '获取地址中...',
     avgRating: 0,
-    reviewCount: 0, // 新增：评价总数
+    reviewCount: 0,
     successRate: 0,
     totalCoaches: 0,
     totalStudents: 0,
     phone: '',
     introduction: '',
     mediaList: [],
-    tags: [], // 新增：驾校特色标签
-    isPremium: false, // 新增：黄金驾校标识
-    distance: '', // 新增：距离
-    latitude: null, // 新增：纬度(用于导航)
-    longitude: null // 新增：经度(用于导航)
+    tags: [],
+    isPremium: false,
+    distance: '',
+    latitude: null,
+    longitude: null
 });
 
 const packageList = ref([]);
@@ -227,52 +174,88 @@ const packageList = ref([]);
 onLoad((options) => {
     if (options.id) {
         schoolId.value = Number(options.id);
-        fetchSchoolDetail(schoolId.value);
     }
-    // 获取从引导页跳过来时可能携带的标记
     if (options.fromGuide === '1') {
         isFromGuide.value = true;
     }
+
+    // 触发获取静态模拟数据
+    fetchMockSchoolDetail();
 });
 
-const fetchSchoolDetail = async (id) => {
-    try {
-        uni.showLoading({ title: '加载中' });
-        const res = await getSchoolDetail(id);
-        uni.hideLoading();
+// --- 🔥 纯静态逼真 Mock 数据获取 ---
+const fetchMockSchoolDetail = () => {
+    uni.showLoading({ title: '加载中' });
 
-        if (res.code === 200 && res.data) {
-            const data = res.data;
-            Object.assign(schoolData, {
-                name: data.name || '',
-                address: data.address || '暂无详细地址',
-                avgRating: data.avgRating || 0,
-                reviewCount: data.reviewCount || 0, // 需后端提供
-                successRate: data.successRate || 0,
-                totalCoaches: data.totalCoaches || 0,
-                totalStudents: data.totalStudents || 0,
-                phone: data.phone || '',
-                introduction: data.introduction || '',
-                mediaList: data.mediaList || [],
-                tags: data.tags || [], // 需后端提供
-                isPremium: data.isPremium || false, // 需后端提供
-                distance: data.distance || '', // 需后端提供(若有定位)
-                latitude: data.latitude || null, // 需后端提供
-                longitude: data.longitude || null // 需后端提供
-            });
-            packageList.value = data.packageList || [];
-        } else {
-            uni.showToast({ title: res.msg || '获取详情失败', icon: 'none' });
-        }
-    } catch (error) {
+    // 模拟网络延迟 500ms，让你看清加载过渡
+    setTimeout(() => {
+        // 填充驾校主信息
+        Object.assign(schoolData, {
+            name: '大众驾校 (东圳东路总校区)',
+            isPremium: true,
+            avgRating: 4.9,
+            reviewCount: 1284,
+            successRate: 92,
+            totalCoaches: 86,
+            totalStudents: 15420,
+            tags: ['自建考场', '免费班车', '随到随学', '金牌口碑'],
+            address: '福建省莆田市荔城区东圳东路123号大众学车基地',
+            distance: '1.5',
+            latitude: 25.454226,  // 真实的莆田坐标，测试导航有效
+            longitude: 119.007788,
+            phone: '400-888-6666',
+            introduction: '大众驾校成立于2005年，是本市占地面积最大、车辆最多的国家一级驾校。拥有占地200亩的自建大型专业封闭式训练场，1:1还原真实考试场地。我们提供全市覆盖的免费班车接送服务，所有教练员均经过星级评定执教，承诺“一次性收费，绝无吃拿卡要”，旨在为您提供最专业、最轻松的学车拿证体验！'
+        });
+
+        // 填充轮播媒体图 (使用了网络公开的占位图来保证显示效果)
+        schoolData.mediaList = [
+            {
+                fileId: 1,
+                category: 1,
+                accessUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop',
+                tag: '绝美训练场'
+            },
+            {
+                fileId: 2,
+                category: 1,
+                accessUrl: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0be2?q=80&w=800&auto=format&fit=crop',
+                tag: '全新教练车'
+            },
+            {
+                fileId: 3,
+                category: 1,
+                accessUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800&auto=format&fit=crop',
+                tag: '学员休息室'
+            }
+        ];
+
+        // 填充套餐列表
+        packageList.value = [
+            {
+                id: 1,
+                name: 'C1 基础无忧班',
+                currentPrice: 2888,
+                shortDesc: '性价比首选，包含所有基础科目培训费用，自主预约练车。',
+                includeExamFee: false,
+                includeTransportation: true,
+                tags: ['多人一车', '适合学生']
+            },
+            {
+                id: 2,
+                name: 'C2 VIP尊享包过班',
+                currentPrice: 4299,
+                shortDesc: '专车专教，提供门对门接送服务，包含所有补考费，拿证最快。',
+                includeExamFee: true,
+                includeTransportation: true,
+                tags: ['1对1教学', '科二科三连考', '优先安排']
+            }
+        ];
+
         uni.hideLoading();
-        console.error('获取驾校详情异常:', error);
-    }
+    }, 500);
 };
 
 // --- 交互事件 ---
-
-// 唤起手机原生内置地图进行位置导航
 const openNativeMap = () => {
     if (!schoolData.latitude || !schoolData.longitude) {
         return uni.showToast({ title: '暂无该驾校精确坐标，无法导航', icon: 'none' });
@@ -287,21 +270,11 @@ const openNativeMap = () => {
     });
 };
 
-// 去评价列表页 (占位，后续开发)
 const goToReviewPage = () => {
-    uni.navigateTo({ url: `/pages/student/school-review/school-review?schoolId=${schoolId.value}` });
+    uni.showToast({ title: '去往评价列表页 (待开发)', icon: 'none' });
+    // uni.navigateTo({ url: `/pages/student/school-review/school-review?schoolId=${schoolId.value}` });
 };
 
-// 跳转到教练列表，并携带当前驾校 ID 供筛选
-const goToCoachList = () => {
-    if (!schoolId.value) return;
-    // 携带 schoolId，你需要在 coach-list 的 onLoad 中接收它并放入查询参数
-    uni.navigateTo({
-        url: `/pages/student/coach-list/coach-list?schoolId=${schoolId.value}&schoolName=${schoolData.name}`
-    });
-};
-
-// 拨打电话
 const callSchool = () => {
     if (schoolData.phone) {
         uni.makePhoneCall({ phoneNumber: schoolData.phone });
@@ -310,7 +283,6 @@ const callSchool = () => {
     }
 };
 
-// 关注/收藏
 const toggleFavorite = () => {
     isFavorite.value = !isFavorite.value;
     uni.showToast({ title: isFavorite.value ? '已关注' : '已取消关注', icon: 'none' });
@@ -318,13 +290,8 @@ const toggleFavorite = () => {
 
 const goBack = () => uni.navigateBack();
 
-// 专属引导页的选择返回
 const selectAndBack = () => {
-    if (isFromGuide) {
-        uni.$emit('selectSchoolFromDetail', schoolId.value);
-    } else {
-        // 调用store设置所选驾校
-    }
+    uni.$emit('selectSchoolFromDetail', schoolId.value);
     uni.navigateBack();
 };
 </script>
@@ -375,7 +342,6 @@ const selectAndBack = () => {
     background-color: #fff;
     border-radius: 20rpx;
     margin: -30rpx 20rpx 24rpx;
-    /* 利用负 margin 向上悬浮盖住轮播图底部 */
     padding: 30rpx;
     position: relative;
     z-index: 10;
@@ -385,13 +351,11 @@ const selectAndBack = () => {
         padding-top: 40rpx;
     }
 
-    /* 非首个卡片取消负 margin */
     &:not(.main-info-card) {
         margin-top: 0;
     }
 }
 
-/* 区块标题 */
 .section-title {
     font-size: 32rpx;
     font-weight: bold;
@@ -716,7 +680,6 @@ const selectAndBack = () => {
     z-index: 100;
     gap: 20rpx;
 
-    /* 图标功能组 (分享/关注) */
     .icon-btn-group {
         display: flex;
         gap: 40rpx;
@@ -761,65 +724,6 @@ const selectAndBack = () => {
             font-weight: bold;
             box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
         }
-
-        /* 已绑定驾校的置灰按钮样式 */
-        &.disabled-btn {
-            background-color: #f5f7fa;
-            color: #c0c4cc;
-            font-weight: bold;
-        }
     }
 }
-
-.coach-entry-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 30rpx !important;
-    margin-bottom: 24rpx;
-
-    &:active {
-        background-color: #f9f9f9;
-    }
-
-    .coach-entry-left {
-        display: flex;
-        align-items: center;
-
-        .icon-bg {
-            width: 56rpx;
-            height: 56rpx;
-            border-radius: 50%;
-            background-color: #e6f2ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .title {
-            font-size: 30rpx;
-            font-weight: bold;
-            color: #333;
-            margin-left: 20rpx;
-        }
-
-        .count {
-            font-size: 26rpx;
-            color: #666;
-            margin-left: 8rpx;
-        }
-    }
-
-    .coach-entry-right {
-        display: flex;
-        align-items: center;
-
-        .desc {
-            font-size: 24rpx;
-            color: #999;
-            margin-right: 6rpx;
-        }
-    }
-}
-
 </style>

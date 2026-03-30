@@ -60,9 +60,6 @@
             "getLocation"
         ],
         "permission": {
-            "scope.userInfo": {
-                "desc": "应用需要获取用户信息"
-            },
             "scope.userLocation": {
                 "desc": "用于获取您的位置以便选择地点"
             }

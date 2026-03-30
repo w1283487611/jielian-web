@@ -66,21 +66,14 @@
 
         <view class="bottom-spacer"></view>
 
-
-
-        <view class="fixed-bottom-bar" v-if="isCurrentCoach">
-            <button class="action-btn disabled-btn">您已报名该教练</button>
-        </view>
-
-        <view class="fixed-bottom-bar" v-else>
+        <view class="fixed-bottom-bar">
             <button class="action-btn primary-btn" @click="selectAndBack">认准这位教练，返回继续</button>
         </view>
-        
     </view>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getCoachDetail } from '@/api/student/coach';
 import { handleAvatar, handleImageUrl } from '@/utils/common'; // 引入全局媒体处理工具
@@ -96,14 +89,6 @@ const coachData = reactive({
     totalRatings: 0,
     tags: [],
     shortIntro: ''
-});
-
-// 判断当前展示的驾校是否等于 Store 中学员已报名的教练
-const isCurrentCoach = computed(() => {
-    if(coachId.value && coachId.value === 8) return true;
-    return false;
-    // 主 / 临时
-    // return studentStore.schoolId && schoolId.value && studentStore.schoolId === schoolId.value;
 });
 
 const mediaList = ref([]);
@@ -415,30 +400,12 @@ const selectAndBack = () => {
     box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
     z-index: 100;
 
-
-    .action-btn {
+    .primary-btn {
         width: 100%;
-        // background-color: #007aff;
-        // color: #fff;
+        background-color: #007aff;
+        color: #fff;
         font-size: 32rpx;
         border-radius: 40rpx;
-
-        &.primary-btn {
-            background-color: #007aff;
-            color: #fff;
-            font-weight: bold;
-            box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
-        }
-
-        /* 已绑定驾校的置灰按钮样式 */
-        &.disabled-btn {
-            background-color: #f5f7fa;
-            color: #c0c4cc;
-            font-weight: bold;
-        }
     }
-
-
-
 }
 </style>

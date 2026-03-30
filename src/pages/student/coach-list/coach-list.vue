@@ -69,7 +69,7 @@
             </view>
 
             <view class="empty-state" v-if="coachList.length === 0 && !loading">
-                <image class="empty-img" src="/static/assets/images/empty-search.png" mode="aspectFit"></image>
+                <!-- <image class="empty-img" src="/static/assets/images/empty-search.png" mode="aspectFit"></image> -->
                 <text class="empty-text">未找到符合条件的教练</text>
                 <button class="reset-btn" v-if="queryParams.keyword" @click="clearSearch">清空搜索条件</button>
             </view>

@@ -132,7 +132,12 @@
         <view class="bottom-spacer"></view>
 
         <view class="fixed-bottom-bar">
-            <template  v-if="isCurrentSchool">
+            <template>
+                <button class="action-btn plain-btn" @click="goBack">再看看</button>
+                <button class="action-btn primary-btn" @click="selectAndBack">认准这家驾校</button>
+            </template>
+
+            <template>
                 <view class="icon-btn-group">
                     <view class="icon-btn" @click="callSchool">
                         <uni-icons type="phone-filled" size="22" color="#007aff"></uni-icons>
@@ -141,12 +146,6 @@
                 </view>
                 <button class="action-btn disabled-btn">您已报名该驾校</button>
             </template>
-
-            <template v-else>
-                <button class="action-btn plain-btn" @click="goBack">再看看</button>
-                <button class="action-btn primary-btn" @click="selectAndBack">认准这家驾校</button>
-            </template>
-
 
             <!-- 
                         <template v-if="isFromGuide">
@@ -186,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getSchoolDetail } from '@/api/student/school';
 import { handleImageUrl, handleVideoUrl } from '@/utils/common';
@@ -198,7 +197,7 @@ const isFavorite = ref(false); // 关注状态
 
 // 判断当前展示的驾校是否等于 Store 中学员已报名的驾校
 const isCurrentSchool = computed(() => {
-    if(schoolId.value && schoolId.value === 80001) return true;
+    if(schoolId.value && schoolId.value === 8) return true;
     return false;
     // return studentStore.schoolId && schoolId.value && studentStore.schoolId === schoolId.value;
 });

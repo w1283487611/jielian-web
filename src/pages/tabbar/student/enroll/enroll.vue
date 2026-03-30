@@ -298,7 +298,7 @@ const goToSchoolDetail = (id) => {
 const chooseCity = () => {
     uni.navigateTo({ url: '/pages/common/city-picker/city-picker' });
 };
-const goToSearch = () => { uni.showToast({ title: '去搜索页', icon: 'none' }); };
+const goToSearch = () => { uni.showToast({ title: '搜索页暂未开放', icon: 'none' }); };
 // 去对应排行或附近列表
 const goToRank = (type) => { uni.showToast({ title: `${type === 'school' ? '驾校' : '教练'}排行榜`, icon: 'none' }); };
 const goToNearby = (type) => {

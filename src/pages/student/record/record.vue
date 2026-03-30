@@ -68,7 +68,7 @@
             </view>
 
             <view class="empty-state" v-if="filteredRecords.length === 0">
-                <image class="empty-img" src="/static/assets/images/empty-list.png" mode="aspectFit"></image>
+                <!-- <image class="empty-img" src="/static/assets/images/empty-list.png" mode="aspectFit"></image> -->
                 <text class="empty-text">暂无相关练车记录</text>
             </view>
 
